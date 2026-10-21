@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ru">
+<!--
+  ════════════════════════════════════════════════════════════════════
+  Одностраничник по заданию (TASK.md). Оформление и вёрстка готовы:
+  стили — сплошные заливки, без градиентов; форма вынесена в отдельную
+  карточку, цели — списком, возраст — отдельным крупным полем.
+
+  Ваша работа за 30 минут:
+    1) "LLM: ПРОМПТ"        — сейчас самая простая версия, напишите свою;
+    2) "SAFETY: RED FLAGS"  — сейчас минимальный список, расширьте его;
+    3) при желании — тексты и формулировки.
+
+  Трогать не обязательно: блок "LLM: ПОДКЛЮЧЕНИЕ" уже рабочий.
+  Работает с любым сервером-хакатоном на порту 8000 без настройки:
+  сначала пробуется стандартный llama.cpp, затем стенд организаторов
+  OVMS; если оба недоступны — показывается понятная ошибка. Ключи
+  не требуются.
+  ════════════════════════════════════════════════════════════════════
+-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Профилактика — локальный LLM</title>
+  <style>
+    /* ═══════════════ ТОКЕНЫ (сплошные цвета, без градиентов) ═══════ */
+    :root {
+      --bg: #eef1f4;
+      --surface: #ffffff;
+      --surface-alt: #f5f7f9;
+      --border: #d7dee5;
+      --border-strong: #b9c5d0;
+      --text: #16212b;
+      --muted: #5d6d7c;
+      --primary: #0f6f63;
+      --primary-dark: #0b5449;
+      --primary-soft: #e4f0ee;
+      --danger: #a41f1f;
+      --danger-soft: #fbeaea;
+      --danger-border: #e3b0b0;
+      --focus: #1d7f72;
+      --radius: 12px;
+      --shadow: 0 1px 2px rgba(22, 33, 43, .05), 0 10px 26px rgba(22, 33, 43, .05);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 16px/1.55 "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+    .shell { max-width: 1100px; margin: 0 auto; padding: 36px 20px 56px; }
+
+    /* ═══════════════════════ ШАПКА ═══════════════════════════════ */
+    .site-head {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .site-head__eyebrow {
+      margin: 0 0 6px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--primary);
+    }
+    .site-head h1 { margin: 0 0 10px; font-size: 30px; line-height: 1.2; }
+    .site-head__lead { margin: 0; max-width: 62ch; color: var(--muted); }
+    .badge {
+      margin: 0;
+      padding: 9px 15px;
+      background: var(--primary-soft);
+      border: 1px solid #b7d6d0;
+      border-radius: 999px;
+      color: var(--primary-dark);
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* ═══════════════════════ СЕТКА ═══════════════════════════════ */
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 430px) minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .card__head {
+      padding: 16px 20px;
+      background: var(--surface-alt);
+      border-bottom: 1px solid var(--border);
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .card__title { margin: 0; font-size: 17px; }
+    .card__sub { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+    .card__body { padding: 20px; }
+
+    /* ═══════════════════════ ФОРМА ═══════════════════════════════ */
+    .form { display: grid; gap: 22px; padding: 20px; }
+    .field { margin: 0; padding: 0; border: 0; }
+    .field__label { display: block; padding: 0; font-size: 14px; font-weight: 700; }
+    .field__hint { margin: 3px 0 9px; font-size: 12.5px; color: var(--muted); }
+
+    /* Возраст — отдельное крупное поле */
+    .age { display: flex; align-items: center; gap: 12px; }
+    .age input {
+      width: 118px;
+      padding: 9px 12px;
+      background: var(--primary-soft);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      color: var(--text);
+      font: 600 19px/1.2 inherit;
+      text-align: center;
+    }
+    .age__unit { font-size: 14px; color: var(--muted); }
+
+    select, textarea, input[type="number"] { font-family: inherit; font-size: 15px; color: var(--text); }
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 118px;
+      padding: 10px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      resize: vertical;
+    }
+
+    /* Цели — список карточек с чекбоксами */
+    .goals { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+    .goals__item label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 13px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .goals__item label:hover { background: var(--primary-soft); border-color: var(--primary); }
+    .goals__item input[type="checkbox"] {
+      flex: none;
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      accent-color: var(--primary);
+    }
+    .goals__item input:checked + span { font-weight: 600; }
+
+    .btn {
+      width: 100%;
+      padding: 13px 18px;
+      background: var(--primary);
+      border: 1px solid var(--primary-dark);
+      border-radius: 10px;
+      color: #ffffff;
+      font: 700 16px/1.2 inherit;
+      cursor: pointer;
+    }
+    .btn:hover:not(:disabled) { background: var(--primary-dark); }
+    .btn:disabled { opacity: .55; cursor: progress; }
+
+    /* ═══════════════════════ СТАТУС И ПЛАН ═══════════════════════ */
+    .status {
+      margin: 0;
+      padding: 11px 13px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .status:empty { display: none; }
+    .status--error {
+      background: var(--danger-soft);
+      border-color: var(--danger-border);
+      color: var(--danger);
+      font-weight: 600;
+    }
+
+    .banner {
+      margin: 0 0 16px;
+      padding: 14px 16px;
+      background: var(--danger-soft);
+      border: 1px solid var(--danger-border);
+      border-left: 4px solid var(--danger);
+      border-radius: 10px;
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .plan p { margin: 0 0 12px; white-space: pre-wrap; }
+    .plan h3 { margin: 20px 0 8px; font-size: 16px; color: var(--primary-dark); }
+    .plan h3:first-child { margin-top: 0; }
+    .plan ul, .plan ol { margin: 0 0 12px; padding-left: 22px; }
+    .plan li { margin-bottom: 6px; }
+    .plan:empty::before {
+      content: "Здесь появится ваш персональный план профилактики.";
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ═══════════════════════ ПОДВАЛ ═══════════════════════════════ */
+    .foot {
+      margin-top: 24px;
+      padding: 15px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--muted);
+      font-size: 13.5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="site-head">
+      <div>
+        <p class="site-head__eyebrow">локальный LLM · приватность</p>
+        <h1>Личный план профилактики</h1>
+        <p class="site-head__lead">
+          Заполните анкету — план составит модель, запущенная на вашем компьютере.
+          Данные не покидают устройство: запросы идут только на локальный сервер
+          <code>localhost:8000</code>.
+        </p>
+      </div>
+      <p class="badge">Данные остаются на вашем устройстве</p>
+    </header>
+
+    <main class="layout">
+      <!-- ══════════ ФОРМА ══════════ -->
+      <section class="card">
+        <div class="card__head">
+          <h2 class="card__title">Анкета</h2>
+          <p class="card__sub">Возраст обязателен, остальные поля уточняют план</p>
+        </div>
+        <form id="fh" class="form">
+          <fieldset class="field">
+            <legend class="field__label">Возраст</legend>
+            <p class="field__hint">Полных лет</p>
+            <div class="age">
+              <input id="age" type="number" value="35" min="1" max="120" required>
+              <span class="age__unit">лет</span>
+            </div>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend class="field__label">Уровень активности</legend>
+            <p class="field__hint">Сколько движения в обычный день</p>
+            <select id="activity">
+              <option>низкий</option><option selected>средний</option><option>высокий</option>
+            </select>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend class="field__label">Цели профилактики</legend>
+            <p class="field__hint">Отметьте, что важно улучшить</p>
+            <ul class="goals">
+              <li class="goals__item">
+                <label><input type="checkbox" name="goal" value="движение"><span>Двигательная активность</span></label>
+              </li>
+              <li class="goals__item">
+                <label><input type="checkbox" name="goal" value="питание"><span>Питание</span></label>
+              </li>
+              <li class="goals__item">
+                <label><input type="checkbox" name="goal" value="обследования"><span>Профилактические обследования</span></label>
+              </li>
+              <li class="goals__item">
+                <label><input type="checkbox" name="goal" value="сон"><span>Режим сна</span></label>
+              </li>
+            </ul>
+          </fieldset>
+
+          <div class="field">
+            <label class="field__label" for="notes">Самочувствие, жалобы, образ жизни</label>
+            <p class="field__hint">Именно это поле проверяется на тревожные симптомы</p>
+            <textarea id="notes" placeholder="Например: хожу 3 часа в день, сон 6 часов, иногда болит поясница"></textarea>
+          </div>
+
+          <button id="go" class="btn" type="submit">Составить план</button>
+          <p id="status" class="status"></p>
+        </form>
+      </section>
+
+      <!-- ══════════ РЕЗУЛЬТАТ ══════════ -->
+      <section class="card">
+        <div class="card__head">
+          <h2 class="card__title">Ваш план</h2>
+          <p class="card__sub">Формируется локальной моделью</p>
+        </div>
+        <div class="card__body">
+          <div id="banner" style="display:none">Обратитесь к врачу (103): тревожные симптомы</div>
+          <div id="plan" class="plan"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">Материал носит образовательный характер и не является медицинской рекомендацией.</footer>
+  </div>
+
+  <script>
+    "use strict";
+    // ═══════════════════════════════════════════════════════════════
+    // ═══ LLM: ПОДКЛЮЧЕНИЕ ══════════════════════════════════════════
+    // Локальный LLM на OpenAI-совместимом API, только localhost:8000.
+    // Сайт сам определяет сервер по порядку ниже: сначала стандартный
+    // llama.cpp (docker compose --profile llama|tiny), если его нет —
+    // стенд организаторов OVMS; ни один не отвечает → понятная ошибка.
+    // ═══════════════════════════════════════════════════════════════
+    const SERVERS = [
+      { name: "llama.cpp", BASE_URL: "http://localhost:8000/v1" },
+      { name: "OVMS",      BASE_URL: "http://localhost:8000/v3" }
+    ];
+    let SERVER = null;
+
+    // Пробуем серверы по очереди: /models → первый живой, model id — в рантайме.
+    async function getServer() {
+      if (SERVER) return SERVER;
+      for (const s of SERVERS) {
+        try {
+          const r = await fetch(s.BASE_URL + "/models");
+          if (!r.ok) continue;
+          const j = await r.json();
+          const id = j.data && j.data[0] && j.data[0].id;
+          if (id) {
+            SERVER = Object.assign({ modelName: id }, s);
+            return SERVER;
+          }
+        } catch (err) { /* следующий сервер */ }
+      }
+      throw new Error("Отсутствует локальный LLM на localhost:8000 процесс llama.cpp или OVMS." +
+        " Запустите docker compose --profile llama up -d (TASK.md §9).");
+    }
+
+    async function chat(messages) {
+      const r = await fetch(SERVER.BASE_URL + "/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ model: SERVER.modelName, messages })
+      });
+      if (!r.ok) throw new Error("HTTP " + r.status + " (" + SERVER.name + ")");
+      return (await r.json()).choices[0].message.content; // TODO: проверьте ответ на пустоту
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ═══ LLM: ПРОМПТ ═══════════════════════════════════════════════
+    // Сейчас минимальный — придумайте свой (по-русски, структурированный
+    // план, без диагнозов и лекарств). Это оценивается жюри.
+    // ═══════════════════════════════════════════════════════════════
+    const SYSTEM_PROMPT =
+      "Составь персональный план профилактики по целям пользователя."; // TODO: ваш промпт
+
+    function buildPrompt(input) {
+      // input = { age, activity, goals, notes }
+      return "Возраст: " + input.age + ". Активность: " + input.activity +
+        ". Цели: " + input.goals.join(", ") + ". " + input.notes; // TODO: соберите подробнее
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ═══ SAFETY: RED FLAGS ═════════════════════════════════════════
+    // Проверка ДО любого запроса к LLM (совпадение → совет врача).
+    // Сейчас минимум — расширьте по списку из TASK.md §6.2.
+    // ═══════════════════════════════════════════════════════════════
+    const RED_FLAGS = [
+      /боль\s+в\s+груд[и]/i,
+      /суицид|покончить\s+с\s+собой/i
+    ];
+    function isRedFlag(text) {
+      return RED_FLAGS.some(re => re.test(text)); // TODO: расширьте список выше
+    }
+
+    // ═══════════════ UI (минимум — сделайте свой) ══════════════════
+    const $ = id => document.getElementById(id);
+
+    // Оформление ответа модели: заголовки, списки, абзацы.
+    // Текст вставляется через textContent — без innerHTML.
+    function renderPlan(text, host) {
+      host.textContent = "";
+      const lines = String(text || "").replace(/\r/g, "").split("\n");
+      let list = null, listTag = "", para = null;
+      const flushPara = () => { if (para) { host.appendChild(para); para = null; } };
+      const flushList = () => { if (list) { host.appendChild(list); list = null; listTag = ""; } };
+
+      for (const raw of lines) {
+        const t = raw.trim();
+        if (!t) { flushPara(); flushList(); continue; }
+
+        const h = t.match(/^#{1,4}\s+(.*)$/);
+        if (h) {
+          flushPara(); flushList();
+          const head = document.createElement("h3");
+          head.textContent = h[1];
+          host.appendChild(head);
+          continue;
+        }
+
+        const bullet = t.match(/^[-–—*•]\s+(.*)$/);
+        const number = t.match(/^\d+[.)]\s+(.*)$/);
+        if (bullet || number) {
+          flushPara();
+          const tag = bullet ? "ul" : "ol";
+          if (!list || listTag !== tag) { flushList(); list = document.createElement(tag); listTag = tag; }
+          const li = document.createElement("li");
+          li.textContent = (bullet || number)[1];
+          list.appendChild(li);
+          continue;
+        }
+
+        flushList();
+        if (!para) para = document.createElement("p");
+        para.appendChild(document.createTextNode(para.textContent ? "\n" + t : t));
+      }
+      flushPara(); flushList();
+    }
+
+    $("fh").addEventListener("submit", async ev => {
+      ev.preventDefault();
+      const input = {
+        age: $("age").value,
+        activity: $("activity").value,
+        goals: [...document.querySelectorAll("input[name=goal]:checked")].map(el => el.value),
+        notes: $("notes").value
+      };
+
+      // red flags — до обращения к модели:
+      if (isRedFlag(input.notes)) {
+        $("banner").style.display = "block";
+        $("status").textContent = "";
+        $("status").classList.remove("status--error");
+        return;
+      }
+      $("banner").style.display = "none";
+      $("plan").textContent = "";
+      $("go").disabled = true;
+      $("status").classList.remove("status--error");
+      $("status").textContent = "Ждём локальную модель — это может занять десятки секунд…";
+
+      try {
+        await getServer(); // llama.cpp → OVMS → ошибка
+        const reply = await chat([
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: buildPrompt(input) }
+        ]);
+        renderPlan(reply, $("plan")); // оформленный вывод плана
+        $("status").textContent = "";
+      } catch (err) {
+        $("status").textContent = "Ошибка: " + err.message;
+        $("status").classList.add("status--error");
+      } finally {
+        $("go").disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
