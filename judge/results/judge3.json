@@ -1,0 +1,85 @@
+{
+  "judge_id": "qwen3.7-plus",
+  "tested_via": "curl+code",
+  "scores": [
+    {
+      "participant": "self369heal-cmyk",
+      "criteria": {
+        "functionality": 9.0,
+        "redflag_safety": 10.0,
+        "disclaimer_prompt_quality": 9.0,
+        "privacy_architecture": 10.0,
+        "ux_resilience": 9.0,
+        "code_security_complexity": 10.0
+      },
+      "summary_score": 9.5,
+      "notes": "CSP header strictly locks network to localhost:8000, labeled red-flag patterns with matched-reason display in banner, proper HTML-escaped markdown renderer, demo button, input validation (age range, goal count, maxlength), and verbatim disclaimer both in plan-box and footer — most privacy-hardened and safety-complete entry."
+    },
+    {
+      "participant": "artur",
+      "criteria": {
+        "functionality": 8.0,
+        "redflag_safety": 9.0,
+        "disclaimer_prompt_quality": 8.0,
+        "privacy_architecture": 9.0,
+        "ux_resilience": 10.0,
+        "code_security_complexity": 9.0
+      },
+      "summary_score": 8.75,
+      "notes": "Editorial-quality UX with connection-status pill, copy-plan, reset, empty states, and 12+ red-flag patterns including English variants; system prompt is short and embedded inline in the fetch call rather than a dedicated constant, which slightly weakens prompt quality, but textContent-only rendering keeps it injection-safe."
+    },
+    {
+      "participant": "Olyshka",
+      "criteria": {
+        "functionality": 8.0,
+        "redflag_safety": 9.0,
+        "disclaimer_prompt_quality": 9.0,
+        "privacy_architecture": 9.0,
+        "ux_resilience": 9.0,
+        "code_security_complexity": 8.0
+      },
+      "summary_score": 8.69,
+      "notes": "Well-structured 4-section system prompt that itself requires the model to emit the verbatim disclaimer, 9 Cyrillic-aware red-flag regexes, createElement-based rendering with spinner/timer, and a clear 103/112 banner; minor ding because one h3 uses innerHTML (though with hardcoded icon, not user data)."
+    },
+    {
+      "participant": "crashmax",
+      "criteria": {
+        "functionality": 8.0,
+        "redflag_safety": 9.0,
+        "disclaimer_prompt_quality": 9.0,
+        "privacy_architecture": 9.0,
+        "ux_resilience": 8.0,
+        "code_security_complexity": 9.0
+      },
+      "summary_score": 8.69,
+      "notes": "25+ individual red-flag regexes with proper Cyrillic support, a dedicated escapeHtml + inlineFormat pipeline, reasoning_effort fallback for Qwen-style servers, and verbatim disclaimer in the header; UX is clean but simpler than artur/self369heal-cmyk (no copy button, no dark mode)."
+    },
+    {
+      "participant": "kopytov",
+      "criteria": {
+        "functionality": 8.0,
+        "redflag_safety": 8.0,
+        "disclaimer_prompt_quality": 5.0,
+        "privacy_architecture": 9.0,
+        "ux_resilience": 9.0,
+        "code_security_complexity": 8.0
+      },
+      "summary_score": 7.75,
+      "notes": "Ambitious chat-style app with onboarding, sidebar, localStorage history, two system prompts, and retry — but the mandatory verbatim disclaimer is replaced by the shorter 'Не заменяет консультацию врача', failing TASK.md §6.1, and goals use button/aria-pressed instead of the required checkboxes."
+    },
+    {
+      "participant": "mira",
+      "criteria": {
+        "functionality": 4.0,
+        "redflag_safety": 2.0,
+        "disclaimer_prompt_quality": 4.0,
+        "privacy_architecture": 9.0,
+        "ux_resilience": 4.0,
+        "code_security_complexity": 6.0
+      },
+      "summary_score": 4.81,
+      "notes": "Essentially the provided template with TODO comments left in: system prompt is one sentence, red-flag list covers only chest pain and suicide (missing dyspnea, bleeding, fainting, T>39, abdominal pain, stroke signs), plan output is unformatted textContent, and there is no markdown rendering or error differentiation."
+    }
+  ],
+  "own_confidence": 0.82
+}

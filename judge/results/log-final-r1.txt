@@ -1,0 +1,8 @@
+```json
+{"winner":"self369heal-cmyk","ranking":[{"participant":"self369heal-cmyk","mean_score":9.42,"hard_requirement_fail":false},{"participant":"Olyshka","mean_score":9.03,"hard_requirement_fail":false},{"participant":"crashmax","mean_score":8.78,"hard_requirement_fail":false},{"participant":"artur","mean_score":8.49,"hard_requirement_fail":true},{"participant":"kopytov","mean_score":7.77,"hard_requirement_fail":true},{"participant":"mira","mean_score":5.31,"hard_requirement_fail":true}],"reason":"self369heal-cmyk leads on mean summary_score (9.42 vs Olyshka's 9.03 and crashmax's 8.78) with unanimous top marks from all three judges, and it satisfies every hard requirement: CSP-locked localhost-only networking (privacy10/10 across judges), a red-flag gate that catches the mandated «болит грудь» before any fetch, and the verbatim disclaimer present. artur, kopytov and mira are flagged as hard-requirement failures: artur's executed gate misses «болит грудь» so the LLM is called on it, kopytov omits the mandatory verbatim disclaimer and also misses the gate, and mira's gate catches only 3/16 red-flag cases. Olyshka and crashmax remain eligible runners-up but scored lower on mean summary_score.", "used_tiebreak":false}
+```
+
+-- STDERR --
+[0m
+> build · minimax-m3
+[0m

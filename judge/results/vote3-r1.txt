@@ -1,0 +1,6 @@
+{"judge_id":"qwen3.7-plus","agree":true}
+
+-- STDERR --
+[0m
+> build · qwen3.7-plus
+[0m

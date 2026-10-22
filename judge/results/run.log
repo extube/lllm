@@ -1,0 +1,2041 @@
+Judges running in parallel — watch: tail -f judge/results/log-judge{1,2,3}.txt
+== judging with judge1 (opencode-go/glm-5.3-flash): Thu Oct 22 18:11:13 UTC 2026
+== judging with judge3 (opencode-go/qwen3.7-plus): Thu Oct 22 18:11:13 UTC 2026
+== judging with judge2 (opencode-go/mimo-v2.6-flash): Thu Oct 22 18:11:13 UTC 2026
+[0m
+> build · mimo-v2.6-flash
+[0m
+[0m
+> build · glm-5.3-flash
+[0m
+[0m
+> build · qwen3.7-plus
+[0m
+I'll judge the 6 hackathon entries. Let me start by checking out the scoring branch and analyzing each entry.
+[0m$ [0mcurl -s http://localhost:8000/v1/models
+{"data":[{"id":"gemma-4-e2b-agent","object":"model","created":1792692683,"owned_by":"OVMS"}],"object":"list"}
+[0m
+[0m$ [0mgit status && git branch -a && ls
+On branch jitterbot/scoring
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	judge/
+
+nothing added to commit but untracked files present (use "git add" to track)
+  artur
+  feat/prepare-for-review-sites
+  hackathon-setup
+* jitterbot/scoring
+  main
+  mira
+  mira-2
+  presentation
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/artur
+  remotes/origin/feat/prepare-for-review-sites
+  remotes/origin/hackathon-setup
+  remotes/origin/main
+  remotes/origin/mira
+  remotes/origin/mira-2
+  remotes/origin/presentation
+Dockerfile
+Olyshka
+README.md
+TASK.md
+artur
+crashmax
+docker-compose.yml
+example
+judge
+kopytov
+mira
+presentation.html
+self369heal-cmyk
+test
+[0m
+[0m$ [0mls -la /workspace && git status 2>/dev/null | head -20 && git log --oneline -5 2>/dev/null
+total 72
+drwxr-xr-x    1 1000     1000           290 Oct 22 17:56 .
+drwxr-xr-x    1 root     root            14 Oct 22 17:43 ..
+drwxr-xr-x    1 1000     1000            16 Oct 20 18:22 .config
+drwxr-xr-x    1 1000     1000           182 Oct 22 18:11 .git
+-rw-r--r--    1 1000     1000            40 Oct 22 17:35 .gitignore
+-rw-r--r--    1 1000     1000          2545 Oct 21 16:25 Dockerfile
+drwxr-xr-x    1 1000     1000            20 Oct 21 17:40 Olyshka
+-rw-r--r--    1 1000     1000          1991 Oct 20 18:10 README.md
+-rw-r--r--    1 1000     1000         11958 Oct 21 16:25 TASK.md
+drwxr-xr-x    1 1000     1000            20 Oct 22 17:43 artur
+drwxr-xr-x    1 1000     1000            20 Oct 22 17:35 crashmax
+-rw-r--r--    1 1000     1000          2869 Oct 21 16:25 docker-compose.yml
+drwxr-xr-x    1 1000     1000            20 Oct 21 16:25 example
+drwxr-xr-x    1 root     root           156 Oct 22 18:06 judge
+drwxr-xr-x    1 1000     1000            20 Oct 21 17:30 kopytov
+drwxr-xr-x    1 1000     1000            20 Oct 22 17:43 mira
+-rw-r--r--    1 1000     1000         41265 Oct 21 16:25 presentation.html
+drwxr-xr-x    1 1000     1000           102 Oct 22 17:38 self369heal-cmyk
+drwxr-xr-x    1 1000     1000            98 Oct 21 16:25 test
+On branch jitterbot/scoring
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	judge/
+
+nothing added to commit but untracked files present (use "git add" to track)
+d2ab979 preparation for hackathon reviewing was done (#13)
+694f829 Add prevention site by self369heal-cmyk (#12)
+b518624 hackaton crashmax (#11)
+7e8374a mira (#10)
+28fdedf mira (#9)
+[0m
+[0m$ [0mgit fetch origin && git checkout jitterbot/scoring 2>&1 | head -20
+error: cannot run ssh: No such file or directory
+fatal: unable to fork
+[0m
+[0m$ [0mls -1 */index.html 2>/dev/null | grep -v example
+Olyshka/index.html
+artur/index.html
+crashmax/index.html
+kopytov/index.html
+mira/index.html
+self369heal-cmyk/index.html
+[0m
+[0m$ [0mcurl -s http://localhost:8000/v1/models 2>&1 | head -50
+{"data":[{"id":"gemma-4-e2b-agent","object":"model","created":1792692685,"owned_by":"OVMS"}],"object":"list"}
+[0m
+[0m$ [0mls */index.html && wc -l */index.html
+Olyshka/index.html
+artur/index.html
+crashmax/index.html
+example/index.html
+kopytov/index.html
+mira/index.html
+self369heal-cmyk/index.html
+      597 Olyshka/index.html
+      978 artur/index.html
+      601 crashmax/index.html
+      163 example/index.html
+      406 kopytov/index.html
+      185 mira/index.html
+      537 self369heal-cmyk/index.html
+     3467 total
+[0m
+[0m→ [0mRead TASK.md
+[0m# [0mTodos
+[•] Static analysis: read all 6 index.html files
+[ ] Verify network targets (grep fetch), red-flag gates, disclaimer
+[ ] Live test: serve pages, replicate JS calls against port 8000
+[ ] Test red-flag path + degraded path per entry
+[ ] Score and emit final JSON
+[0m
+[0m
+[0m$ [0mcurl -s -m 5 http://localhost:8000/v1/models || echo "LLM DOWN"
+{"data":[{"id":"gemma-4-e2b-agent","object":"model","created":1792692689,"owned_by":"OVMS"}],"object":"list"}
+[0m
+[0m$ [0mls judge/ 2>/dev/null; ls test/
+README.md
+__pycache__
+evaluator-prompt.md
+final-prompt.md
+pipeline.py
+results
+run.sh
+README.md
+api-smoke.sh
+site.test.mjs
+test-example.sh
+[0m
+[0m→ [0mRead Olyshka/index.html
+[0m→ [0mRead artur/index.html
+[0m→ [0mRead crashmax/index.html
+[0m→ [0mRead kopytov/index.html
+[0m→ [0mRead mira/index.html
+[0m→ [0mRead Olyshka/index.html
+[0m→ [0mRead artur/index.html
+[0m→ [0mRead self369heal-cmyk/index.html
+[0m→ [0mRead crashmax/index.html
+[0m→ [0mRead artur/index.html[90m [offset=848][0m
+[0m→ [0mRead artur/index.html[90m [offset=847][0m
+[0m→ [0mRead kopytov/index.html
+[0m→ [0mRead mira/index.html
+[0m$ [0mcat judge/README.md; echo ---; cat judge/run.sh; echo ---; ls judge/results
+# Hackathon scoring — how to run
+
+## Prerequisites
+- opencode CLI installed (`/root/.opencode/bin/opencode`), authenticated with your GO subscription.
+- Local LLM live on `:8000` (`curl http://localhost:8000/v1/models`) — the judged sites use it.
+- Repo on branch `jitterbot/scoring`.
+
+## One command for the whole pipeline
+
+```bash
+sh judge/run.sh
+# swap models: J1=opencode/glm-4.6-flash J2=... J3=... FINAL=opencode/glm-5.3 sh judge/run.sh
+```
+
+## What it does, step by step
+
+1. **Round 1 — evaluation (parallelizable if you want speed, script runs sequentially).**
+   The SAME prompt (`judge/evaluator-prompt.md`) goes to three cloud judges via
+   `opencode run --model <id>`. Each judge:
+   - statically reads all six `index.html` files,
+   - starts `python3 -m http.server 8080` per entry and curl-tests the page's
+     system/user prompt against `localhost:8000/v1/chat/completions`,
+   - verifies red-flag path blocks the request, error states, privacy,
+   - returns the fixed JSON schema (6 participants × 6 criteria, weights in prompt).
+2. **`judge/pipeline.py`**: parses each judge output (first JSON object extracted from the
+   log), computes mean `summary_score` per participant, disqualifies hard-requirement
+   failures, and sends all three reports + rubric to the **final model** (chair judge) →
+   `{"winner","ranking","reason"}`.
+3. **Voting.** Same three judge models get the verdict and answer
+   `{"judge_id","agree":true|false}`. **If ≥2 disagree → the three judges rerun scoring
+   (fresh round, logs `*-r2`)** and the final model issues a new, binding verdict.
+4. **Artifacts** land in `judge/results/`:
+
+| File | Content |
+|---|---|
+| `log-judge{1,2,3}.txt` | raw agent transcript (incl. commands it ran) = decision log |
+| `judge{1,2,3}.json` | the extracted report per judge |
+| `log-final-r1.txt` | final model's reasoning + verdict |
+| `votes-r1.json` | per-judge agree/disagree votes |
+| `winner.json` | winner + tiers + reason |
+| `tierlist.md` | S/A/B/C tier table (mean score, hard-req fails) |
+| `analytics-<participant>.md` | per-project: every judge's criteria scores + notes |
+| `log-final-r2.txt`, `*-r2` | second round (only if triggered) |
+
+## Model assignment (cloud, GO subscription)
+
+| Role | Default (in scripts) |
+|---|---|
+| Judge 1 | `opencode/GLM-5.3-Flash` |
+| Judge 2 | `opencode/MiMo-V2.6-Flash` |
+| Judge 3 | `opencode/Qwen3.7-Plus` |
+| Final | `opencode/MiniMax-M3` |
+
+Adjust ids to whatever your plan exposes (`opencode models` lists them).
+
+## Human check before trusting the result
+- Skim `log-judge*.txt`: did each judge actually run the curl tests (not just static read)?
+- Check `votes-r1.json` — a rerun that produced identical disagreement = strong signal to
+  judge manually.
+- `tierlist.md` is a suggestion; final call is yours.
+---
+#!/usr/bin/env sh
+# Hackathon scoring orchestrator.
+# Usage: sh judge/run.sh
+# Requires: opencode CLI, local LLM on :8000 (the judged sites target it).
+# Judge/final model ids changed via env: J1= J2= J3= FINAL=
+
+set -e
+ROOT=$(cd "$(dirname "$0")/.." && pwd)
+RES=$ROOT/judge/results
+mkdir -p "$RES"
+cd "$ROOT"
+
+J1=${J1:-opencode-go/glm-5.3-flash}
+J2=${J2:-opencode-go/mimo-v2.6-flash}
+J3=${J3:-opencode-go/qwen3.7-plus}
+FINAL=${FINAL:-opencode-go/minimax-m3}
+PROMPT=$(cat judge/evaluator-prompt.md)
+
+judge() { # $1 model, $2 name
+  echo "== judging with $2 ($1): $(date)" | tee "$RES/log-$2.txt"
+  opencode run --model "$1" -- "$PROMPT" 2>&1 | tee -a "$RES/log-$2.txt"
+}
+
+extract_json() { # $1 raw log, $2 out.json — pull first valid JSON object from agent answer
+  python3 - "$1" "$2" <<'EOF'
+import json,sys,re
+raw=open(sys.argv[1]).read()
+m=re.search(r'\{.*\}',raw,re.S)
+data=json.loads(m.group(0))
+open(sys.argv[2],'w').write(json.dumps(data,ensure_ascii=False,indent=2))
+EOF
+}
+
+rm -f "$RES"/log-judge{1,2,3}.txt
+judge "$J1" judge1 & P1=$!
+judge "$J2" judge2 & P2=$!
+judge "$J3" judge3 & P3=$!
+echo "Judges running in parallel — watch: tail -f judge/results/log-judge{1,2,3}.txt"
+wait $P1; S1=$?; wait $P2; S2=$?; wait $P3; S3=$?
+echo "Judge exit codes: $S1 $S2 $S3"
+extract_json "$RES/log-judge1.txt" "$RES/judge1.json"
+extract_json "$RES/log-judge2.txt" "$RES/judge2.json"
+extract_json "$RES/log-judge3.txt" "$RES/judge3.json"
+
+python3 judge/pipeline.py "$RES" "$FINAL"
+---
+log-judge1.txt
+log-judge2.txt
+log-judge3.txt
+run.log
+[0m
+[0m$ [0mwhich node python3 chromium google-chrome chromium-browser 2>/dev/null; node -v 2>/dev/null; ls test/
+/usr/bin/node
+/usr/bin/python3
+v24.18.1
+README.md
+api-smoke.sh
+site.test.mjs
+test-example.sh
+[0m
+[0m
+[0m$ [0mfor p in Olyshka artur crashmax kopytov mira self369heal-cmyk; do
+  echo "=== $p ==="
+  grep -n "fetch(" "$p/index.html" | head -20
+  echo "---localhost check---"
+  grep -nE "localhost:8000|fetch\(.*(http|/)" "$p/index.html" | grep -v "localhost:8000" | head -10
+  echo ""
+done
+=== Olyshka ===
+346:          const r = await fetch(s.BASE_URL + "/models");
+361:      const r = await fetch(SERVER.BASE_URL + "/chat/completions", {
+---localhost check---
+346:          const r = await fetch(s.BASE_URL + "/models");
+361:      const r = await fetch(SERVER.BASE_URL + "/chat/completions", {
+
+=== artur ===
+674:        return await fetch(url, Object.assign({}, options || {}, { signal: controller.signal }));
+---localhost check---
+
+=== crashmax ===
+346:          const r = await fetch(s.BASE_URL + "/models");
+360:    const postChat = (extra) => fetch(SERVER.BASE_URL + "/chat/completions", {
+---localhost check---
+346:          const r = await fetch(s.BASE_URL + "/models");
+360:    const postChat = (extra) => fetch(SERVER.BASE_URL + "/chat/completions", {
+
+=== kopytov ===
+153:          const r = await fetch(s.BASE_URL + "/models", { signal: requestController.signal });
+168:      const r = await fetch(SERVER.BASE_URL + "/chat/completions", {
+---localhost check---
+153:          const r = await fetch(s.BASE_URL + "/models", { signal: requestController.signal });
+168:      const r = await fetch(SERVER.BASE_URL + "/chat/completions", {
+
+=== mira ===
+96:          const r = await fetch(s.BASE_URL + "/models");
+111:      const r = await fetch(SERVER.BASE_URL + "/chat/completions", {
+---localhost check---
+96:          const r = await fetch(s.BASE_URL + "/models");
+111:      const r = await fetch(SERVER.BASE_URL + "/chat/completions", {
+
+=== self369heal-cmyk ===
+264:          const r = await fetch(s.BASE_URL + "/models", { signal: AbortSignal.timeout(5000) });
+283:      return fetch(SERVER.BASE_URL + "/chat/completions", {
+---localhost check---
+264:          const r = await fetch(s.BASE_URL + "/models", { signal: AbortSignal.timeout(5000) });
+283:      return fetch(SERVER.BASE_URL + "/chat/completions", {
+[0m
+[0m→ [0mRead self369heal-cmyk/index.html
+Now let me do live testing - start HTTP servers and test against the local LLM.
+[0m$ [0mgrep -n "fetch(" */index.html
+Olyshka/index.html:346:          const r = await fetch(s.BASE_URL + "/models");
+Olyshka/index.html:361:      const r = await fetch(SERVER.BASE_URL + "/chat/completions", {
+artur/index.html:674:        return await fetch(url, Object.assign({}, options || {}, { signal: controller.signal }));
+crashmax/index.html:346:          const r = await fetch(s.BASE_URL + "/models");
+crashmax/index.html:360:    const postChat = (extra) => fetch(SERVER.BASE_URL + "/chat/completions", {
+example/index.html:74:          const r = await fetch(s.BASE_URL + "/models");
+example/index.html:89:      const r = await fetch(SERVER.BASE_URL + "/chat/completions", {
+kopytov/index.html:153:          const r = await fetch(s.BASE_URL + "/models", { signal: requestController.signal });
+kopytov/index.html:168:      const r = await fetch(SERVER.BASE_URL + "/chat/completions", {
+mira/index.html:96:          const r = await fetch(s.BASE_URL + "/models");
+mira/index.html:111:      const r = await fetch(SERVER.BASE_URL + "/chat/completions", {
+self369heal-cmyk/index.html:264:          const r = await fetch(s.BASE_URL + "/models", { signal: AbortSignal.timeout(5000) });
+self369heal-cmyk/index.html:283:      return fetch(SERVER.BASE_URL + "/chat/completions", {
+[0m
+[0m$ [0mls /root/.cache/ms-playwright 2>/dev/null; npm ls -g --depth=0 2>/dev/null; which playwright puppeteer 2>/dev/null; ls /usr/bin | grep -i -E "chrom|firefox" ; echo "done"
+/usr/local/lib
+`-- (empty)
+
+done
+[0m
+[0m→ [0mRead Olyshka/index.html
+[0m→ [0mRead example/index.html
+[0m→ [0mRead crashmax/index.html
+[0m→ [0mRead artur/index.html
+[0m$ [0mMODEL_ID=$(curl -s http://localhost:8000/v1/models | python3 -c "import sys,json; print(json.load(sys.stdin)['data'][0]['id'])")
+echo "MODEL: $MODEL_ID"
+
+# Test chat endpoint
+curl -s http://localhost:8000/v1/chat/completions -H 'Content-Type: application/json' \
+  -d "{\"model\":\"$MODEL_ID\",\"messages\":[{\"role\":\"system\",\"content\":\"Ты помощник по профилактической медицине.\"},{\"role\":\"user\",\"content\":\"Возраст: 35. Активность: средний. Цели: сон. Составь план.\"}],\"temperature\":0.4,\"max_tokens\":400}" 2>&1 | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('choices',[{}])[0].get('message',{}).get('content','NO RESPONSE')[:500])"
+MODEL: gemma-4-e2b-agent
+Здравствуйте! Как помощник по профилактической медицине, я рад помочь вам составить план по улучшению качества сна.
+
+Учитывая ваш возраст (35 лет) и уровень активности (средний), мы сфокусируемся на создании здоровых вечерних ритуалов и коррекции образа жизни, которые способствуют достижению качественного и восстанавливающего сна.
+
+**Важно:** Этот план является рекомендательным. Если у вас есть серьезные, хронические проблемы со сном (например, апноэ сна или сильная бессонница), **всегда консуль
+[0m
+[0m→ [0mRead artur/index.html[90m [offset=848][0m
+[0m→ [0mRead kopytov/index.html
+[0m→ [0mRead mira/index.html
+All 6 entries read. Now verifying network targets and TASK.md rules:
+[0m→ [0mRead TASK.md
+[0m✱ [0mGrep "fetch\(|https?://[^"')\s]+|XMLHttpRequest|WebSocket|EventSource|import |navigator\.send"[90m 28 matches[0m
+[0m
+[0m# [0mTodos
+[✓] Static analysis: read all 6 index.html files
+[✓] Verify network targets (grep fetch), red-flag gates, disclaimer
+[•] Live test: serve pages, replicate JS calls against port 8000
+[ ] Test red-flag path + degraded path per entry
+[ ] Score and emit final JSON
+[0m
+[0m$ [0mpython3 -m http.server 8080 --bind 127.0.0.1 >/tmp/opencode/http8080.log 2>&1 & sleep 1; for p in Olyshka artur crashmax kopytov mira self369heal-cmyk; do echo "== $p: $(curl -s -o /dev/null -w '%{http_code} %{size_download}B' http://localhost:8080/$p/index.html)"; done; which node || echo "no node"
+== Olyshka: 200 30990B
+== artur: 200 56472B
+== crashmax: 200 21764B
+== kopytov: 200 34318B
+== mira: 200 11916B
+== self369heal-cmyk: 200 30440B
+/usr/bin/node
+[0m
+[0m→ [0mRead self369heal-cmyk/index.html
+[0m
+[0m$ [0mgrep -c "Материал носит образовательный характер и не является медицинской рекомендацией" */index.html
+Olyshka/index.html:3
+artur/index.html:1
+crashmax/index.html:1
+example/index.html:1
+kopytov/index.html:0
+mira/index.html:1
+self369heal-cmyk/index.html:2
+[0m
+node is available, so I can execute each page's actual `isRedFlag` code (not just eyeball regexes). Building a harness that extracts each entry's JS and runs the real red-flag gate:
+[0m← [0mWrite /tmp/opencode/redflag_test.js
+Wrote file successfully.
+[0m
+[0m$ [0mfor p in Olyshka artur crashmax kopytov mira self369heal-cmyk; do node /tmp/opencode/redflag_test.js /workspace/$p 2>&1 | tail -40; done
+/tmp/opencode/redflag_test.js:43
+  sandbox.document.querySelectorAll("input[name=goal]")  = [];
+  ^
+
+ReferenceError: Invalid left-hand side in assignment
+    at run (/tmp/opencode/redflag_test.js:43:20)
+    at Object.<anonymous> (/tmp/opencode/redflag_test.js:71:13)
+    at Module._compile (node:internal/modules/cjs/loader:1871:14)
+    at Object..js (node:internal/modules/cjs/loader:2002:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.18.1
+/tmp/opencode/redflag_test.js:43
+  sandbox.document.querySelectorAll("input[name=goal]")  = [];
+  ^
+
+ReferenceError: Invalid left-hand side in assignment
+    at run (/tmp/opencode/redflag_test.js:43:20)
+    at Object.<anonymous> (/tmp/opencode/redflag_test.js:71:13)
+    at Module._compile (node:internal/modules/cjs/loader:1871:14)
+    at Object..js (node:internal/modules/cjs/loader:2002:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.18.1
+/tmp/opencode/redflag_test.js:43
+  sandbox.document.querySelectorAll("input[name=goal]")  = [];
+  ^
+
+ReferenceError: Invalid left-hand side in assignment
+    at run (/tmp/opencode/redflag_test.js:43:20)
+    at Object.<anonymous> (/tmp/opencode/redflag_test.js:71:13)
+    at Module._compile (node:internal/modules/cjs/loader:1871:14)
+    at Object..js (node:internal/modules/cjs/loader:2002:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.18.1
+/tmp/opencode/redflag_test.js:43
+  sandbox.document.querySelectorAll("input[name=goal]")  = [];
+  ^
+
+ReferenceError: Invalid left-hand side in assignment
+    at run (/tmp/opencode/redflag_test.js:43:20)
+    at Object.<anonymous> (/tmp/opencode/redflag_test.js:71:13)
+    at Module._compile (node:internal/modules/cjs/loader:1871:14)
+    at Object..js (node:internal/modules/cjs/loader:2002:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.18.1
+/tmp/opencode/redflag_test.js:43
+  sandbox.document.querySelectorAll("input[name=goal]")  = [];
+  ^
+
+ReferenceError: Invalid left-hand side in assignment
+    at run (/tmp/opencode/redflag_test.js:43:20)
+    at Object.<anonymous> (/tmp/opencode/redflag_test.js:71:13)
+    at Module._compile (node:internal/modules/cjs/loader:1871:14)
+    at Object..js (node:internal/modules/cjs/loader:2002:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.18.1
+/tmp/opencode/redflag_test.js:43
+  sandbox.document.querySelectorAll("input[name=goal]")  = [];
+  ^
+
+ReferenceError: Invalid left-hand side in assignment
+    at run (/tmp/opencode/redflag_test.js:43:20)
+    at Object.<anonymous> (/tmp/opencode/redflag_test.js:71:13)
+    at Module._compile (node:internal/modules/cjs/loader:1871:14)
+    at Object..js (node:internal/modules/cjs/loader:2002:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.18.1
+[0m
+[0m← [0mEdit /tmp/opencode/redflag_test.js
+Index: /tmp/opencode/redflag_test.js
+===================================================================
+--- /tmp/opencode/redflag_test.js
++++ /tmp/opencode/redflag_test.js
+@@ -39,9 +39,8 @@
+ function run(file) {
+   const html = fs.readFileSync(file, "utf8");
+   const m = html.match(/<script>([\s\S]*?)<\/script>/);
+   if (!m) { console.log(file, ": NO SCRIPT"); return null; }
+-  sandbox.document.querySelectorAll("input[name=goal]")  = [];
+   const fn = new Function("document", "window", "localStorage", "fetch", "navigator",
+     "globalThis", "console", "AbortController", "AbortSignal", "setTimeout", "clearTimeout", m[1] +
+     "\n;return ({ isRedFlag: typeof isRedFlag!=='undefined'?isRedFlag:null, findRedFlags: typeof findRedFlags!=='undefined'?findRedFlags:null });");
+   return fn(sandbox.document, sandbox.window, sandbox.localStorage, sandbox.fetch,
+
+[0m
+[0m$ [0mfor p in Olyshka artur crashmax kopytov mira self369heal-cmyk; do node /tmp/opencode/redflag_test.js /workspace/$p 2>&1 | tail -40; done
+### /workspace/Olyshka
+  PASS [C1 example-cases "болит грудь"] expected=true got=true
+  PASS [C2 боль в груди] expected=true got=true
+  PASS [C3 давит в груди] expected=true got=true
+  PASS [C4 давление в груди] expected=true got=true
+  PASS [C5 одышка] expected=true got=true
+  PASS [C6 не хватает воздуха] expected=true got=true
+  FAIL [C7 кровотечение] expected=true got=false
+  PASS [C8 потеря сознания] expected=true got=true
+  PASS [C9 суицид] expected=true got=true
+  PASS [C10 t>39] expected=true got=true
+  PASS [C11 острая боль в животе] expected=true got=true
+  PASS [C12 болит живот (простое)] expected=true got=true
+  FAIL [C13 инсульт/речь] expected=true got=false
+  FAIL [C14 инсульт/немеет рука] expected=true got=false
+  PASS [C15 neg: healthy] expected=false got=false
+  PASS [C16 neg: возраст/вес контекст] expected=false got=false
+  => 13/16 correct
+
+### /workspace/artur
+  FAIL [C1 example-cases "болит грудь"] expected=true got=false
+  PASS [C2 боль в груди] expected=true got=true
+  PASS [C3 давит в груди] expected=true got=true
+  FAIL [C4 давление в груди] expected=true got=false
+  PASS [C5 одышка] expected=true got=true
+  PASS [C6 не хватает воздуха] expected=true got=true
+  PASS [C7 кровотечение] expected=true got=true
+  PASS [C8 потеря сознания] expected=true got=true
+  PASS [C9 суицид] expected=true got=true
+  PASS [C10 t>39] expected=true got=true
+  PASS [C11 острая боль в животе] expected=true got=true
+  FAIL [C12 болит живот (простое)] expected=true got=false
+  FAIL [C13 инсульт/речь] expected=true got=false
+  FAIL [C14 инсульт/немеет рука] expected=true got=false
+  PASS [C15 neg: healthy] expected=false got=false
+  PASS [C16 neg: возраст/вес контекст] expected=false got=false
+  => 11/16 correct
+
+### /workspace/crashmax
+  PASS [C1 example-cases "болит грудь"] expected=true got=true
+  PASS [C2 боль в груди] expected=true got=true
+  PASS [C3 давит в груди] expected=true got=true
+  FAIL [C4 давление в груди] expected=true got=false
+  PASS [C5 одышка] expected=true got=true
+  PASS [C6 не хватает воздуха] expected=true got=true
+  FAIL [C7 кровотечение] expected=true got=false
+  PASS [C8 потеря сознания] expected=true got=true
+  PASS [C9 суицид] expected=true got=true
+  PASS [C10 t>39] expected=true got=true
+  PASS [C11 острая боль в животе] expected=true got=true
+  FAIL [C12 болит живот (простое)] expected=true got=false
+  PASS [C13 инсульт/речь] expected=true got=true
+  FAIL [C14 инсульт/немеет рука] expected=true got=false
+  PASS [C15 neg: healthy] expected=false got=false
+  PASS [C16 neg: возраст/вес контекст] expected=false got=false
+  => 12/16 correct
+
+### /workspace/kopytov
+  FAIL [C1 example-cases "болит грудь"] expected=true got=false
+  PASS [C2 боль в груди] expected=true got=true
+  PASS [C3 давит в груди] expected=true got=true
+  PASS [C4 давление в груди] expected=true got=true
+  PASS [C5 одышка] expected=true got=true
+  PASS [C6 не хватает воздуха] expected=true got=true
+  PASS [C7 кровотечение] expected=true got=true
+  FAIL [C8 потеря сознания] expected=true got=false
+  PASS [C9 суицид] expected=true got=true
+  PASS [C10 t>39] expected=true got=true
+  PASS [C11 острая боль в животе] expected=true got=true
+  FAIL [C12 болит живот (простое)] expected=true got=false
+  FAIL [C13 инсульт/речь] expected=true got=false
+  FAIL [C14 инсульт/немеет рука] expected=true got=false
+  PASS [C15 neg: healthy] expected=false got=false
+  PASS [C16 neg: возраст/вес контекст] expected=false got=false
+  => 11/16 correct
+
+### /workspace/mira
+  FAIL [C1 example-cases "болит грудь"] expected=true got=false
+  PASS [C2 боль в груди] expected=true got=true
+  FAIL [C3 давит в груди] expected=true got=false
+  FAIL [C4 давление в груди] expected=true got=false
+  FAIL [C5 одышка] expected=true got=false
+  FAIL [C6 не хватает воздуха] expected=true got=false
+  FAIL [C7 кровотечение] expected=true got=false
+  FAIL [C8 потеря сознания] expected=true got=false
+  FAIL [C9 суицид] expected=true got=false
+  FAIL [C10 t>39] expected=true got=false
+  FAIL [C11 острая боль в животе] expected=true got=false
+  FAIL [C12 болит живот (простое)] expected=true got=false
+  FAIL [C13 инсульт/речь] expected=true got=false
+  FAIL [C14 инсульт/немеет рука] expected=true got=false
+  PASS [C15 neg: healthy] expected=false got=false
+  PASS [C16 neg: возраст/вес контекст] expected=false got=false
+  => 3/16 correct
+
+### /workspace/self369heal-cmyk
+  PASS [C1 example-cases "болит грудь"] expected=true got=true -> боль в груди
+  PASS [C2 боль в груди] expected=true got=true -> боль в груди
+  PASS [C3 давит в груди] expected=true got=true -> боль в груди
+  FAIL [C4 давление в груди] expected=true got=false
+  PASS [C5 одышка] expected=true got=true -> одышка, трудно дышать
+  PASS [C6 не хватает воздуха] expected=true got=true -> одышка, трудно дышать
+  PASS [C7 кровотечение] expected=true got=true -> кровотечение
+  PASS [C8 потеря сознания] expected=true got=true -> потеря сознания
+  PASS [C9 суицид] expected=true got=true -> мысли о самоубийстве
+  PASS [C10 t>39] expected=true got=true -> температура выше 39 °C
+  PASS [C11 острая боль в животе] expected=true got=true -> острая боль в животе
+  FAIL [C12 болит живот (простое)] expected=true got=false
+  PASS [C13 инсульт/речь] expected=true got=true -> признаки инсульта
+  FAIL [C14 инсульт/немеет рука] expected=true got=false
+  PASS [C15 neg: healthy] expected=false got=false
+  PASS [C16 neg: возраст/вес контекст] expected=false got=false
+  => 13/16 correct (findRedFlags with labels)
+[0m
+[0m$ [0mpkill -f "python3 -m http.server 808" 2>/dev/null; sleep 0.5
+for p in Olyshka artur crashmax kopytov mira self369heal-cmyk; do
+  cd /workspace/$p && python3 -m http.server 8080 &>/dev/null &
+done
+sleep 1
+# Verify servers
+for port in 8080; do
+  curl -s -o /dev/null -w "%{http_code}" http://localhost:$port/index.html
+done
+echo ""
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+Red-flag gate verified by executing the real code. Critical finding: the mandated case «болит грудь» is caught by Olyshka, crashmax, self369heal-cmyk — but **missed by artur, kopytov, mira** (they'd call the LLM on it). Now live-testing the LLM path — replicating each page's exact request (real system prompt + real `buildPrompt` output):
+[0m← [0mWrite /tmp/opencode/mkpayloads.js
+Wrote file successfully.
+[0m
+[0m← [0mWrite /tmp/opencode/artur_system.txt
+Wrote file successfully.
+[0m
+[0m$ [0mfor p in Olyshka artur crashmax kopytov mira self369heal-cmyk; do node /tmp/opencode/mkpayloads.js /workspace/$p 2>&1 | tail -5; done && node -e "const f=require('fs');for(const p of ['kopytov','mira','Olyshka','crashmax','self369heal-cmyk','artur'])console.log('---',p);const d=JSON.parse(f.readFileSync('/tmp/opencode/payload-kopytov.json'));console.log(d[0].system?d[0].system.slice(0,200):'')"
+at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.18.1
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.18.1
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.18.1
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.18.1
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.18.1
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.18.1
+--- kopytov
+--- mira
+--- Olyshka
+--- crashmax
+--- self369heal-cmyk
+--- artur
+node:fs:561
+  return binding.open(
+                 ^
+
+Error: ENOENT: no such file or directory, open '/tmp/opencode/payload-kopytov.json'
+    at Object.openSync (node:fs:561:18)
+    at Object.readFileSync (node:fs:445:35)
+    at [eval]:1:147
+    at runScriptInThisContext (node:internal/vm:219:10)
+    at node:internal/process/execution:451:12
+    at [eval]-wrapper:6:24
+    at runScriptInContext (node:internal/process/execution:449:60)
+    at evalFunction (node:internal/process/execution:283:30)
+    at evalTypeScript (node:internal/process/execution:295:3)
+    at node:internal/main/eval_string:71:3 {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/tmp/opencode/payload-kopytov.json'
+}
+
+Node.js v24.18.1
+[0m
+[0m$ [0mcd /workspace && (nohup python3 -m http.server 8080 >/tmp/opencode/http8080.log 2>&1 &) ; sleep 1; for p in Olyshka artur crashmax kopytov mira self369heal-cmyk; do echo -n "$p: "; curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/$p/index.html; done
+Olyshka: 200
+artur: 200
+crashmax: 200
+kopytov: 200
+mira: 200
+self369heal-cmyk: 200
+[0m
+[0m$ [0mcurl -s -m 120 http://localhost:8000/v1/chat/completions -H 'Content-Type: application/json' -d '{"model":"gemma-4-e2b-agent","messages":[{"role":"system","content":"Отвечай одно словом."},{"role":"user","content":"Скажи 'да'"}],"max_tokens":50}' | head -c 800; echo; curl -s -m 5 http://localhost:8000/v3/models | head -c 300
+{"choices":[{"finish_reason":"stop","index":0,"logprobs":null,"message":{"content":"Да","role":"assistant","tool_calls":[]}}],"created":1792692878,"model":"gemma-4-e2b-agent","object":"chat.completion","usage":{"prompt_tokens":24,"completion_tokens":2,"total_tokens":26}}
+{"data":[{"id":"gemma-4-e2b-agent","object":"model","created":1792692878,"owned_by":"OVMS"}],"object":"list"}
+[0m
+My payload script had a buggy return expression. Rewriting it robustly:
+[0m← [0mWrite /tmp/opencode/mkpayloads.js
+Wrote file successfully.
+[0m
+[0m$ [0m> /tmp/opencode/mk.log; for p in Olyshka artur crashmax kopytov mira self369heal-cmyk; do node /tmp/opencode/mkpayloads.js /workspace/$p >> /tmp/opencode/mk.log 2>&1; done; cat /tmp/opencode/mk.log
+/tmp/opencode/mkpayloads.js:53
+  "kopytov":        { sys: ex.INITIAL_SYSTEM_PROMPT + "\n\n" + ex.buildProfileContext(input), user: ex.buildPrompt(input) },
+                                                                  ^
+
+TypeError: ex.buildProfileContext is not a function
+    at Object.<anonymous> (/tmp/opencode/mkpayloads.js:53:67)
+    at Module._compile (node:internal/modules/cjs/loader:1871:14)
+    at Object..js (node:internal/modules/cjs/loader:2002:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.18.1
+/tmp/opencode/mkpayloads.js:53
+  "kopytov":        { sys: ex.INITIAL_SYSTEM_PROMPT + "\n\n" + ex.buildProfileContext(input), user: ex.buildPrompt(input) },
+                                                                  ^
+
+TypeError: ex.buildProfileContext is not a function
+    at Object.<anonymous> (/tmp/opencode/mkpayloads.js:53:67)
+    at Module._compile (node:internal/modules/cjs/loader:1871:14)
+    at Object..js (node:internal/modules/cjs/loader:2002:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.18.1
+/tmp/opencode/mkpayloads.js:53
+  "kopytov":        { sys: ex.INITIAL_SYSTEM_PROMPT + "\n\n" + ex.buildProfileContext(input), user: ex.buildPrompt(input) },
+                                                                  ^
+
+TypeError: ex.buildProfileContext is not a function
+    at Object.<anonymous> (/tmp/opencode/mkpayloads.js:53:67)
+    at Module._compile (node:internal/modules/cjs/loader:1871:14)
+    at Object..js (node:internal/modules/cjs/loader:2002:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.18.1
+/workspace/kopytov OK  system: 2272 ch; user: 391 ch
+─── SYSTEM ───
+Ты — помощник по профилактике и здоровому образу жизни. Отвечай по-русски.
+Не ставь диагнозы, не назначай и не называй лекарства, дозировки и схемы лечения; не отменяй назначения врача.
+Не обещай результатов, не запугивай, не выдумывай медицинские факты, источники и численные оценки риска.
+При призн
+─── USER ───
+Данные пользователя:
+- Возраст: 35 лет
+- Уровень физической активности: средний
+- Цели профилактики: двигательная активность, питание, профилактические обследования, сон
+- Самочувствие, жалобы, образ жизни: Офисная работа, сижу по 9 часов. Сплю 6 часов, ложусь после часа ночи. Пью 4 чашки кофе в ден
+/tmp/opencode/mkpayloads.js:53
+  "kopytov":        { sys: ex.INITIAL_SYSTEM_PROMPT + "\n\n" + ex.buildProfileContext(input), user: ex.buildPrompt(input) },
+                                                                  ^
+
+TypeError: ex.buildProfileContext is not a function
+    at Object.<anonymous> (/tmp/opencode/mkpayloads.js:53:67)
+    at Module._compile (node:internal/modules/cjs/loader:1871:14)
+    at Object..js (node:internal/modules/cjs/loader:2002:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.18.1
+/tmp/opencode/mkpayloads.js:53
+  "kopytov":        { sys: ex.INITIAL_SYSTEM_PROMPT + "\n\n" + ex.buildProfileContext(input), user: ex.buildPrompt(input) },
+                                                                  ^
+
+TypeError: ex.buildProfileContext is not a function
+    at Object.<anonymous> (/tmp/opencode/mkpayloads.js:53:67)
+    at Module._compile (node:internal/modules/cjs/loader:1871:14)
+    at Object..js (node:internal/modules/cjs/loader:2002:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.18.1
+[0m
+[0m← [0mEdit /tmp/opencode/mkpayloads.js
+Index: /tmp/opencode/mkpayloads.js
+===================================================================
+--- /tmp/opencode/mkpayloads.js
++++ /tmp/opencode/mkpayloads.js
+@@ -45,17 +45,14 @@
+   "AbortController", "AbortSignal", "setTimeout", "clearTimeout", js + collector)(
+     sandbox.document, sandbox.window, sandbox.localStorage, sandbox.fetch, sandbox.navigator,
+     sandbox, sandbox.console, AbortController, AbortSignal, setTimeout, clearTimeout);
+ 
+-const configs = {
+-  "Olyshka":        { sys: ex.SYSTEM_PROMPT, user: ex.buildPrompt(input) },
+-  "artur":          { sys: fs.readFileSync("/tmp/opencode/artur_system.txt", "utf8"), user: ex.buildPrompt(input) },
+-  "crashmax":       { sys: ex.SYSTEM_PROMPT, user: ex.buildPrompt(input) },
+-  "kopytov":        { sys: ex.INITIAL_SYSTEM_PROMPT + "\n\n" + ex.buildProfileContext(input), user: ex.buildPrompt(input) },
+-  "mira":           { sys: ex.SYSTEM_PROMPT, user: ex.buildPrompt(input) },
+-  "self369heal-cmyk": { sys: ex.SYSTEM_PROMPT, user: ex.buildPrompt(input) },
+-};
+-const cfg = configs[path.basename(dir)];
++const base = path.basename(dir);
++const artur_sys = fs.readFileSync("/tmp/opencode/artur_system.txt", "utf8");
++let cfg;
++if (base === "kopytov") cfg = { sys: ex.INITIAL_SYSTEM_PROMPT + "\n\n" + ex.buildProfileContext(input), user: ex.buildPrompt(input) };
++else if (base === "artur") cfg = { sys: artur_sys, user: ex.buildPrompt(input) };
++else cfg = { sys: ex.SYSTEM_PROMPT, user: ex.buildPrompt(input) };
+ if (!cfg || !cfg.sys || !cfg.user) { console.log(dir, "EXTRACT FAILED:", Object.keys(ex)); process.exit(1); }
+ const payload = { model: "gemma-4-e2b-agent", messages: [{ role: "system", content: cfg.sys }, { role: "user", content: cfg.user }] };
+ fs.writeFileSync(`/tmp/opencode/payload-${path.basename(dir)}.json`, JSON.stringify(payload));
+ console.log(dir, "OK  system:", cfg.sys.length, "ch; user:", cfg.user.length, "ch");
+
+[0m
+[0m$ [0m> /tmp/opencode/mk.log; for p in Olyshka artur crashmax kopytov mira self369heal-cmyk; do node /tmp/opencode/mkpayloads.js /workspace/$p >> /tmp/opencode/mk.log 2>&1; done; cat /tmp/opencode/mk.log
+/workspace/Olyshka OK  system: 1238 ch; user: 420 ch
+─── SYSTEM ───
+Ты — ассистент по профилактической медицине. Ты НЕ врач и НЕ ставишь диагнозы.
+Твоя задача — составить безопасный персональный план профилактики, а не лечить.
+
+Строгие правила:
+1. Не назначай лекарства, дозировки и не предлагай отменять уже принимаемые препараты.
+2. Не ставь диагнозов и не интерпрет
+─── USER ───
+Возраст: 35 лет.
+Уровень физической активности: средний.
+Цели профилактики: двигательная активность, питание, профилактические обследования, сон.
+
+Самочувствие, жалобы и образ жизни (со слов пользователя):
+Офисная работа, сижу по 9 часов. Сплю 6 часов, ложусь после часа ночи. Пью 4 чашки кофе в день
+/workspace/artur OK  system: 218 ch; user: 1367 ch
+─── SYSTEM ───
+Ты помощник по образовательной профилактике и формированию повседневных привычек. Не являешься врачом. Не диагностируй, не назначай лечение и лекарства. Отвечай бережно, ясно и без категоричных медицинских утверждений.
+─── USER ───
+Составь бережный образовательный план профилактических привычек на 7 дней.
+
+Данные: возраст 35 лет; текущая активность — средний; выбранные цели — двигательная активность, питание, профилактические обследования, сон.
+
+Комментарий пользователя: Офисная работа, сижу по 9 часов. Сплю 6 часов, ложусь по
+/workspace/crashmax OK  system: 818 ch; user: 352 ch
+─── SYSTEM ───
+Ты помощник по превентивной медицине. Отвечай только по-русски.
+Материал образовательный: это не диагноз, не назначение и не замена очному врачу.
+Запрещено: ставить диагнозы, называть лекарства, указывать дозировки, писать что состояние срочное.
+Учитывай возраст и уровень активности. Пиши конкретно,
+─── USER ───
+Составь персональный план профилактики на 4 недели.
+Возраст: 35 лет.
+Уровень активности: средний.
+Цели: двигательная активность, питание, профилактические обследования, сон.
+Самочувствие, жалобы, образ жизни: Офисная работа, сижу по 9 часов. Сплю 6 часов, ложусь после часа ночи. Пью 4 чашки кофе в д
+/workspace/kopytov OK  system: 2272 ch; user: 391 ch
+─── SYSTEM ───
+Ты — помощник по профилактике и здоровому образу жизни. Отвечай по-русски.
+Не ставь диагнозы, не назначай и не называй лекарства, дозировки и схемы лечения; не отменяй назначения врача.
+Не обещай результатов, не запугивай, не выдумывай медицинские факты, источники и численные оценки риска.
+При призн
+─── USER ───
+Данные пользователя:
+- Возраст: 35 лет
+- Уровень физической активности: средний
+- Цели профилактики: двигательная активность, питание, профилактические обследования, сон
+- Самочувствие, жалобы, образ жизни: Офисная работа, сижу по 9 часов. Сплю 6 часов, ложусь после часа ночи. Пью 4 чашки кофе в ден
+/workspace/mira OK  system: 61 ch; user: 253 ch
+─── SYSTEM ───
+Составь персональный план профилактики по целям пользователя.
+─── USER ───
+Возраст: 35. Активность: средний. Цели: двигательная активность, питание, профилактические обследования, сон. Офисная работа, сижу по 9 часов. Сплю 6 часов, ложусь после часа ночи. Пью 4 чашки кофе в день. Хочу больше энергии и меньше уставать к вечеру.
+/workspace/self369heal-cmyk OK  system: 1116 ch; user: 513 ch
+─── SYSTEM ───
+Ты — помощник по профилактике здоровья для взрослых. Отвечаешь только на русском языке.
+Твоя задача — составить понятный персональный план здоровых привычек по данным анкеты.
+
+Правила:
+1. Не ставь диагнозов и не называй возможные болезни.
+2. Не назначай лекарства, БАДы, витамины и дозировки.
+3. Сове
+─── USER ───
+Анкета пользователя:
+- Возраст (полных лет): 35
+- Уровень физической активности: средний
+- Цели профилактики (разделы плана в этом порядке): двигательная активность; питание; профилактические обследования; сон
+- Самочувствие, жалобы, образ жизни: Офисная работа, сижу по 9 часов. Сплю 6 часов, ложусь
+[0m
+Payloads built from each entry's own code. Sending all 6 exact requests to the live model in parallel:
+[0m← [0mWrite /tmp/opencode/harness.mjs
+Wrote file successfully.
+[0m
+[0m← [0mEdit /tmp/opencode/harness.mjs
+Index: /tmp/opencode/harness.mjs
+===================================================================
+--- /tmp/opencode/harness.mjs
++++ /tmp/opencode/harness.mjs
+@@ -216,10 +216,14 @@
+   (doc.getElementById("error-box").hidden === false ? doc.getElementById("error-message").textContent : "") ||
+   status.textContent || status.innerHTML || "";
+ out.flows[name] = {
+   fetchCalls: spy.calls.map((c) => ({ url: c.url, method: c.method })),
+-  bannerShown: name === "redflag" ? !(banner.hidden === true || banner.style.display === "none") : undefined,
+-  bannerText: name === "redflag" ? (banner.innerHTML || banner.textContent || "").slice(0, 300) : undefined,
++  banner: name === "redflag" ? {
++    hidden: banner.hidden,
++    display: banner.style.display,
++    dataset: Object.assign({}, banner.dataset),
++    text: String(banner.innerHTML || banner.textContent || "").slice(0, 300),
++  } : undefined,
+   statusText: String(status.textContent || "").slice(0, 300),
+   statusHTML: String(status.innerHTML || "").slice(0, 300),
+   planLen: String(plan.innerHTML || plan.textContent || "").length,
+   errorText: String(errorMsg).slice(0, 300),
+
+[0m
+[0m$ [0mcd /tmp/opencode && for p in Olyshka artur crashmax kopytov mira self369heal-cmyk; do ( curl -s --max-time 240 -o resp-$p.json -w "%{http_code} %{time_total}s %{size_download}B" http://localhost:8000/v1/chat/completions -H 'Content-Type: application/json' -d @payload-$p.json > code-$p.txt; echo "$p: $(cat code-$p.txt)" >> mk2.log ) & done; wait; cat /tmp/opencode/mk2.log 2>/dev/null || cat mk2.log
+artur: 200 24.294215s 1508B
+Olyshka: 200 37.047900s 2146B
+crashmax: 200 37.475088s 2277B
+kopytov: 200 38.618180s 2764B
+self369heal-cmyk: 200 45.849466s 3368B
+mira: 200 79.706975s 7122B
+[0m
+[0m$ [0mcd /tmp/opencode && node -e '
+const fs=require("fs");
+for(const p of["Olyshka","artur","crashmax","kopytov","mira","self369heal-cmyk"]){
+ try{const j=JSON.parse(fs.readFileSync(`resp-${p}.json`));const c=j.choices&&j.choices[0];const t=c.message.content;
+ console.log("════════ "+p+" ════════  finish="+c.finish_reason+" tokens="+j.usage.completion_tokens);
+ console.log(t.slice(0,1400));
+ console.log(t.length>1400?"…[+"+(t.length-1400)+" chars]":"");
+ }catch(e){console.log(p,"PARSE FAIL",fs.readFileSync(`resp-${p}.json`,"utf8").slice(0,300));}}'
+════════ Olyshka ════════  finish=stop tokens=310
+## Активность
+- 1. Включите двигательную активность в свою жизнь ежедневно.
+- 2. Выделяйте 15–30 минут для умеренной физической активности в течение рабочего дня.
+- 3. Планируйте разминку для тела после продолжительной сидения за столом.
+- 4. Выделяйте 30–60 минут для неспецифической активности после рабочего дня.
+
+## Питание
+- 1. Регулируйте потребление кофеина.
+- 2. Ограничивайте потребление кофеина (кофе, чай) после 16:00.
+- 3. Сбалансируйте потребление белка для поддержания уровня энергии.
+- 4. Обеспечьте сбалансированное потребление витаминов и минералов в рамках ежедневного рациона.
+
+## Обследования
+- 1. Регулярно проходите диспансеризацию в соответствии с возрастными нормами.
+- 2. Проводите оценку своего состояния в соответствии с рекомендациями по диспансеризации.
+- 3. Регулярно контролируйте показатели своего общего состояния и самочувствия.
+- 4. Проводите оценку своего состояния через 1 месяц для отслеживания динамики.
+
+## Важно
+- Материал носит образовательный характер и не является медицинской рекомендацией.
+
+════════ artur ════════  finish=stop tokens=174
+План на неделю
+
+Пн — Начинаем с заботы о теле, чтобы поднять уровень бодрости.
+Вт — Установи стабильность для тела, чтобы почувствовать себя обновленным.
+Вт — Установи стабильность для тела, чтобы почувствовать себя обновленным.
+Ср — Настраиваем режим для тела, чтобы почувствовать себя обновленным.
+Чт — Укрепляем гармонию для тела, чтобы почувствовать себя обновленным.
+Пт — Укрепляем гармонию для тела, чтобы почувствовать себя обновленным.
+Сб — Настраиваем режим для тела, чтобы почувствовать себя обновленным.
+Вс — Закрепляем привычки для тела, чтобы почувствовать себя обновленным.
+
+Первый шаг — Настраиваем наши ежедневные шаги для повышения уровня энергии.
+
+════════ crashmax ════════  finish=stop tokens=309
+## Движение
+- - Включите в свою рутину регулярные короткие прогулки на свежем воздухе после рабочего дня.
+- - Включите в свою рутину включение легкой ежедневной физической активности для стимуляции активности.
+- - Включите в свою рутину разминку после долгих периодов сидячего положения.
+- - - Снижение ирра встреча с обращением к более подвижным формам.
+
+## Питание
+- - - Сбалансируйте свое питание за счет включения полезных и питательных продуктов.
+- - - Ограничьте потребление стимуляторов за счет ограничения потребления стимуляторов.
+- - - Ограничьте потребление кофеина за счет ограничения потребления кофеина.
+- - - Увеличьте потребление антиугряющих продуктов за счет увеличения потребления антиугряющих продуктов.
+
+## Обследования
+- - - Регулярно проходите плановые осмотры по возрасту.
+- - - Регулярно проходите плановые осмотры по возрасту.
+- - - Регулярно проходите плановые осмотры по возрасту.
+
+## Сон
+- - - Настраивайте свое состояние за счет настройки вашего сна.
+- - - Настраивайте свое состояние за счет настройки вашего сна.
+- - - Настраивайте свое состояние за счет настройки вашего сна.
+
+════════ kopytov ════════  finish=stop tokens=321
+Ваш фокус — как гармонизировать образ жизни для повышения уровня энергии.
+
+**Активность**
+*   Скорректируйте свою активность, чтобы компенсировать сидячую работу.
+*   Если вы проводите много времени в работе, постарайтесь добавить небольшие периоды движения.
+
+**Питание**
+*   Учитывая употребление кофе, сосредоточьтесь на сбалансированном питании для поддержания уровня энергии.
+*   Следите за сбалансированностью своего рациона, чтобы обеспечить организм нужными ресурсами.
+
+**Обследования
+*   Для поддержания энергии важно регулярно проводить профилактические обследования.
+*   Регулярно планируйте профилактические обследования, чтобы мониторинг состояния организма.
+
+**Сон
+*   Для повышения уровня энергии необходимо оптимизировать режим сна.
+*   Оптимизируйте режим сна, чтобы организм восстанавливался и давал необходимое чувство бодрости.
+
+**Первый шаг
+Ваш первый шаг — это структурировать режим дня для повышения уровня энергии.
+
+Если вы чувствуете, что вам не хватает энергии к вечеру, вам необходимо сбалансировать ваше потребление, ваше движение, ваше обследование и ваш сон.
+
+Для повышения уровня энергии вам необходимо структурировать режим дня.
+
+Учитывая вашу ситуацию, вам необходимо сбалансировать вашу активность, питание, профилактические обследования и сон.
+
+Какой вопрос требует внимания?
+Как часто вы планируете своими усилиями?
+
+════════ mira ════════  finish=stop tokens=1138
+## Персональный План Профилактики для Вас (35 лет, Средняя Активность, Офисная Работа)
+
+**Ваша Ситуация:** Вы — активный профессионал, который много работает (9 часов в офисе) и нуждается в высокой энергии для поддержания продуктивности и бодрости к вечеру.
+
+**Ваши Главные Задачи (Цели):**
+
+1. **Повышение Энергии:** Увеличить уровень бодрости и снизить чувство усталости к вечеру.
+2. **Восстановление:** Обеспечить качественное восстановление физической и умственной энергии.
+3. **Профилактика:** Предотвратить развитие профессиональных выгораний и возрастных возрастных изменений, связанных с сидячим образом жизни.
+
+---
+
+### 1. Коррекция Образа Жизни (Режим и График)
+
+**Проблема:** Длительный рабочий день + Недостаток сна = Истощение.
+
+**Рекомендации:**
+
+* **Управление Сном (Приоритет №1):**
+    * **Чёткое Выделение Времени:** Жесткое следование графику сна/бодрствования.
+    * **Гигиена Сна:** Создание "ритуала отбоя" (например, отказ от экранов за 30 минут до сна, чтобы мозг "переключился").
+    * **Качество Сна:** Обеспечить, чтобы 6 часов сна были максимально качественными и восстанавливающими (контроль за количеством кофеина после обеда).
+* **Управление Рабочим Днем:**
+    * **Микро-перерывы:** Внедрение обязательных, но коротких (5-10 минут) разминок/растяжек в течение рабочего дня для снятия мышечной и ментальной нагрузки.
+    * **Мобильность:** Обязательное планирование **д
+…[+2454 chars]
+════════ self369heal-cmyk ════════  finish=stop tokens=429
+## Краткое резюме
+
+План составлен для повышения уровня энергии и улучшения самочувствия к вечеру, с учетом вашего рабочего графика и образа жизни.
+
+## Двигательная активность
+
+*   Включите в распорядок дня ежедневные прогулки на свежем воздухе (минимум 30 минут, 5 раз в неделю).
+*   Включите в распорядок дня 3-5 раз в неделю умеренные физические нагрузки, подбирая виды активности, соответствующие вашему уровню активности.
+*   Планируйте время для выполнения двигательной активности после окончания рабочего дня.
+*   Соблюдайте правильное распределение нагрузки, учитывающее ваше сидячее положение в течение рабочего дня.
+
+## Питание
+
+*   Планируйте сбалансированное питание с учетом потребности в дополнительной энергии для борьбы с утомляемостью.
+*   Обеспечьте достаточное потребление полезных продуктов, чтобы поддерживать уровень энергии.
+*   Ограничьте потребление кофеина для коррекции состояния к вечеру.
+*   Обеспечьте сбалансированное потребление пищи, чтобы уменьшить чувство усталости к вечеру.
+
+## Профилактические обследования
+
+*   Проведите общие профилактические обследования для оценки состояния организма в связи с потребностью в дополнительной энергии.
+*   Обсудите с терапевтом необходимость проведения диспансеризации.
+*   Обсудите с терапевтом необходимость сдачи необходимых анализов крови.
+*   Обсудите с терапевтом необходимость проведения осмотров по возрасту и уровню ак
+…[+288 chars]
+[0m
+[0m$ [0mcd /tmp/opencode && node harness.mjs 2>&1 | tail -c 6000
+"errorText": "",
+        "errorMessage": "",
+        "planBoxHidden": false
+      },
+      "redflag": {
+        "fetchCalls": [
+          {
+            "url": "http://localhost:8000/v1/models",
+            "method": "GET"
+          },
+          {
+            "url": "http://localhost:8000/v1/chat/completions",
+            "method": "POST"
+          }
+        ],
+        "banner": {
+          "hidden": true,
+          "dataset": {},
+          "text": ""
+        },
+        "statusText": "",
+        "statusHTML": "",
+        "planLen": 0,
+        "errorText": "",
+        "errorMessage": "",
+        "planBoxHidden": false
+      },
+      "down": {
+        "fetchCalls": [
+          {
+            "url": "http://localhost:8000/v1/models",
+            "method": "GET"
+          },
+          {
+            "url": "http://localhost:8000/v3/models",
+            "method": "GET"
+          }
+        ],
+        "statusText": "LLM недоступен. Локальный сервер не отвечает на localhost:8000. Запустите: docker compose --profile llama up -d (или --profile tiny).",
+        "statusHTML": "",
+        "planLen": 0,
+        "errorText": "LLM недоступен. Локальный сервер не отвечает на localhost:8000. Запустите: docker compose --profile llama up -d (или --profile tiny).",
+        "errorMessage": "",
+        "planBoxHidden": false
+      }
+    },
+    "prompts": {
+      "hasSystem": true,
+      "systemLen": 2193,
+      "userLen": 312
+    }
+  },
+  {
+    "participant": "mira",
+    "loadError": null,
+    "redflags": {
+      "болит грудь": false,
+      "сильная боль в груди": true,
+      "одышка при обычной ходьбе": false,
+      "идёт кровотечение из носа": false,
+      "потерял сознание на минуту": false,
+      "суицидальные мысли, не хочу жить": true,
+      "температура 39.5 держится третий день": false,
+      "острая боль в животе": false,
+      "асимметрия лица и нарушилась речь": false,
+      "Мало двигаюсь, плохо сплю, офисная работа, хочу больше энергии.": false
+    },
+    "flows": {
+      "normal": {
+        "fetchCalls": [
+          {
+            "url": "http://localhost:8000/v1/models",
+            "method": "GET"
+          },
+          {
+            "url": "http://localhost:8000/v1/chat/completions",
+            "method": "POST"
+          }
+        ],
+        "statusText": "",
+        "statusHTML": "",
+        "planLen": 164,
+        "errorText": "",
+        "errorMessage": "",
+        "planBoxHidden": false
+      },
+      "redflag": {
+        "fetchCalls": [
+          {
+            "url": "http://localhost:8000/v1/chat/completions",
+            "method": "POST"
+          }
+        ],
+        "banner": {
+          "hidden": true,
+          "display": "none",
+          "dataset": {},
+          "text": ""
+        },
+        "statusText": "",
+        "statusHTML": "",
+        "planLen": 164,
+        "errorText": "",
+        "errorMessage": "",
+        "planBoxHidden": false
+      },
+      "down": {
+        "fetchCalls": [
+          {
+            "url": "http://localhost:8000/v1/chat/completions",
+            "method": "POST"
+          }
+        ],
+        "statusText": "Ошибка: fetch failed",
+        "statusHTML": "",
+        "planLen": 0,
+        "errorText": "Ошибка: fetch failed",
+        "errorMessage": "",
+        "planBoxHidden": false
+      }
+    },
+    "prompts": {
+      "hasSystem": true,
+      "systemLen": 61,
+      "userLen": 174
+    }
+  },
+  {
+    "participant": "self369heal-cmyk",
+    "loadError": null,
+    "redflags": {
+      "болит грудь": true,
+      "сильная боль в груди": true,
+      "одышка при обычной ходьбе": true,
+      "идёт кровотечение из носа": true,
+      "потерял сознание на минуту": true,
+      "суицидальные мысли, не хочу жить": true,
+      "температура 39.5 держится третий день": true,
+      "острая боль в животе": true,
+      "асимметрия лица и нарушилась речь": true,
+      "Мало двигаюсь, плохо сплю, офисная работа, хочу больше энергии.": false
+    },
+    "flows": {
+      "normal": {
+        "fetchCalls": [
+          {
+            "url": "http://localhost:8000/v1/models",
+            "method": "GET"
+          },
+          {
+            "url": "http://localhost:8000/v1/chat/completions",
+            "method": "POST"
+          }
+        ],
+        "statusText": "",
+        "statusHTML": "<span></span>",
+        "planLen": 260,
+        "errorText": "<span></span>",
+        "errorMessage": "",
+        "planBoxHidden": false
+      },
+      "redflag": {
+        "fetchCalls": [],
+        "banner": {
+          "hidden": false,
+          "dataset": {},
+          "text": ""
+        },
+        "statusText": "",
+        "statusHTML": "<span></span>",
+        "planLen": 260,
+        "errorText": "<span></span>",
+        "errorMessage": "",
+        "planBoxHidden": false
+      },
+      "down": {
+        "fetchCalls": [
+          {
+            "url": "http://localhost:8000/v1/chat/completions",
+            "method": "POST"
+          }
+        ],
+        "statusText": "",
+        "statusHTML": "<span>LLM недоступен: соединение с localhost:8000 прервалось.</span>",
+        "planLen": 0,
+        "errorText": "<span>LLM недоступен: соединение с localhost:8000 прервалось.</span>",
+        "errorMessage": "",
+        "planBoxHidden": true
+      }
+    },
+    "prompts": {
+      "hasSystem": true,
+      "systemLen": 1116,
+      "userLen": 434
+    }
+  }
+]
+[0m
+[0m→ [0mRead /tmp/opencode/harness-results.json
+All 6 produced real plans (finish=stop). Checking mira's tail for degeneration (it was longest):
+[0m$ [0mcd /tmp/opencode && node -e '
+const fs=require("fs");
+const j=JSON.parse(fs.readFileSync("resp-mira.json"));const t=j.choices[0].message.content;
+console.log("mira tail:"); console.log(t.slice(-900));'
+mira tail:
+чения" рабочего режима (медитация, хобби, полное отключение от рабочих задач, чтобы мозг отдыхал, несмотря на то, что тело устало).
+* **Мониторинг Выгорания:** Ежедневная оценка уровня энергии (шкала от 1 до 10) для раннего выявления признаков выгорания, чтобы можно было вовремя скорректировать план, а не ждать полного схода.
+
+---
+
+### Краткое Резюме (Ваш Идеальный Сценарий)
+
+**Вы хотите быть продуктивным и энергичным, но не выгоревшим.**
+
+1. **Утро/День:** Высокая продуктивность + Работа.
+2. **Переключение:** Грамотное чередование рабочего потока и коротких, но эффективных разминок/перезагрузок.
+3. **Энергосбережение:** Правильное чередование стимуляторов (кофе/аптепены) для достижения пиковых моментов продуктивности, без последующего обвала.
+4. **Вечер:** Резкое и осознанное отключение от работы и работа с качественным сном, чтобы гарантировать восстановление к следующему рабочему дню.
+[0m
+[0m$ [0mpkill -f "python3 -m http.server 808" 2>/dev/null
+echo "done"
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m
+[0m← [0mEdit /tmp/opencode/harness.mjs
+Index: /tmp/opencode/harness.mjs
+===================================================================
+--- /tmp/opencode/harness.mjs
++++ /tmp/opencode/harness.mjs
+@@ -225,8 +225,17 @@
+   } : undefined,
+   statusText: String(status.textContent || "").slice(0, 300),
+   statusHTML: String(status.innerHTML || "").slice(0, 300),
+   planLen: String(plan.innerHTML || plan.textContent || "").length,
++  planKids: plan.children.length,
++  planContentKids: doc.getElementById("plan-content").children.length,
++  messagesKids: doc.getElementById("messages").children.length,
++  loadingHidden: doc.getElementById("loading-state") ? doc.getElementById("loading-state").hidden : undefined,
++  errorBoxHidden: doc.getElementById("error-box") ? doc.getElementById("error-box").hidden : undefined,
++  emergencyBanner: (() => {
++    const b = doc.getElementById("emergency-banner");
++    return b ? { hidden: b.hidden } : undefined;
++  })(),
+   errorText: String(errorMsg).slice(0, 300),
+   errorMessage: String(doc.getElementById("error-message").textContent || "").slice(0, 300),
+   planBoxHidden: doc.getElementById("plan-box") ? doc.getElementById("plan-box").hidden : undefined,
+ };
+
+[0m
+```json
+{
+  "judge_id": "qwen3.7-plus",
+  "tested_via": "curl+code",
+  "scores": [
+    {
+      "participant": "self369heal-cmyk",
+      "criteria": {
+        "functionality": 9.0,
+        "redflag_safety": 10.0,
+        "disclaimer_prompt_quality": 9.0,
+        "privacy_architecture": 10.0,
+        "ux_resilience": 9.0,
+        "code_security_complexity": 10.0
+      },
+      "summary_score": 9.50,
+      "notes": "CSP header strictly locks network to localhost:8000, labeled red-flag patterns with matched-reason display in banner, proper HTML-escaped markdown renderer, demo button, input validation (age range, goal count, maxlength), and verbatim disclaimer both in plan-box and footer — most privacy-hardened and safety-complete entry."
+    },
+    {
+      "participant": "artur",
+      "criteria": {
+        "functionality": 8.0,
+        "redflag_safety": 9.0,
+        "disclaimer_prompt_quality": 8.0,
+        "privacy_architecture": 9.0,
+        "ux_resilience": 10.0,
+        "code_security_complexity": 9.0
+      },
+      "summary_score": 8.75,
+      "notes": "Editorial-quality UX with connection-status pill, copy-plan, reset, empty states, and 12+ red-flag patterns including English variants; system prompt is short and embedded inline in the fetch call rather than a dedicated constant, which slightly weakens prompt quality, but textContent-only rendering keeps it injection-safe."
+    },
+    {
+      "participant": "Olyshka",
+      "criteria": {
+        "functionality": 8.0,
+        "redflag_safety": 9.0,
+        "disclaimer_prompt_quality": 9.0,
+        "privacy_architecture": 9.0,
+        "ux_resilience": 9.0,
+        "code_security_complexity": 8.0
+      },
+      "summary_score": 8.69,
+      "notes": "Well-structured 4-section system prompt that itself requires the model to emit the verbatim disclaimer, 9 Cyrillic-aware red-flag regexes, createElement-based rendering with spinner/timer, and a clear 103/112 banner; minor ding because one h3 uses innerHTML (though with hardcoded icon, not user data)."
+    },
+    {
+      "participant": "crashmax",
+      "criteria": {
+        "functionality": 8.0,
+        "redflag_safety": 9.0,
+        "disclaimer_prompt_quality": 9.0,
+        "privacy_architecture": 9.0,
+        "ux_resilience": 8.0,
+        "code_security_complexity": 9.0
+      },
+      "summary_score": 8.69,
+      "notes": "25+ individual red-flag regexes with proper Cyrillic support, a dedicated escapeHtml + inlineFormat pipeline, reasoning_effort fallback for Qwen-style servers, and verbatim disclaimer in the header; UX is clean but simpler than artur/self369heal-cmyk (no copy button, no dark mode)."
+    },
+    {
+      "participant": "kopytov",
+      "criteria": {
+        "functionality": 8.0,
+        "redflag_safety": 8.0,
+        "disclaimer_prompt_quality": 5.0,
+        "privacy_architecture": 9.0,
+        "ux_resilience": 9.0,
+        "code_security_complexity": 8.0
+      },
+      "summary_score": 7.75,
+      "notes": "Ambitious chat-style app with onboarding, sidebar, localStorage history, two system prompts, and retry — but the mandatory verbatim disclaimer is replaced by the shorter 'Не заменяет консультацию врача', failing TASK.md §6.1, and goals use button/aria-pressed instead of the required checkboxes."
+    },
+    {
+      "participant": "mira",
+      "criteria": {
+        "functionality": 4.0,
+        "redflag_safety": 2.0,
+        "disclaimer_prompt_quality": 4.0,
+        "privacy_architecture": 9.0,
+        "ux_resilience": 4.0,
+        "code_security_complexity": 6.0
+      },
+      "summary_score": 4.81,
+      "notes": "Essentially the provided template with TODO comments left in: system prompt is one sentence, red-flag list covers only chest pain and suicide (missing dyspnea, bleeding, fainting, T>39, abdominal pain, stroke signs), plan output is unformatted textContent, and there is no markdown rendering or error differentiation."
+    }
+  ],
+  "own_confidence": 0.82
+}
+```
+[0m$ [0mcd /tmp/opencode && python3 - <<'EOF'
+import re
+s=open('harness.mjs').read()
+s=s.replace('''  await flow("normal", "up", FORM.notes);
+  await flow("redflag", "up", "болит грудь");
+  await flow("down", "down", FORM.notes);''','''  await flow("normal", "up", FORM.notes);
+  await flow("redflag", "up", "болит грудь");
+  await flow("redflag2", "up", "сильная боль в груди");
+  await flow("down", "down", FORM.notes);''')
+s=s.replace('banner: name === "redflag" ? {','banner: name.startsWith("redflag") ? {')
+s=s.replace('if (name !== "redflag") doc.getElementById("banner").hidden = true;','if (!name.startsWith("redflag")) doc.getElementById("banner").hidden = true;')
+open('harness.mjs','w').write(s)
+EOF
+node harness.mjs > /tmp/opencode/harness-out.txt 2>&1; echo "exit=$?"; python3 -c "
+import json
+d=json.load(open('/tmp/opencode/harness-results.json'))
+for e in d:
+    print('==',e['participant'],'load:',e['loadError'])
+    print(' redflags:', {k[:28]:v for k,v in e['redflags'].items()})
+    for f,v in e['flows'].items():
+        print('  flow',f,'calls=',[c['url'].split('/v1/')[-1] or c['url'].split('/v3/')[-1] for c in v['fetchCalls']],'banner=',v.get('banner'),'status=',v.get('statusText','')[:80],'statusHTML=',v.get('statusHTML','')[:80],'planKids=',v.get('planKids'),'planContentKids=',v.get('planContentKids'),'messagesKids=',v.get('messagesKids'),'errBox=',v.get('errorBoxHidden'),'emerg=',v.get('emergencyBanner'))
+"
+exit=0
+== Olyshka load: None
+ redflags: {'болит грудь': True, 'сильная боль в груди': True, 'одышка при обычной ходьбе': True, 'идёт кровотечение из носа': True, 'потерял сознание на минуту': True, 'суицидальные мысли, не хочу ': True, 'температура 39.5 держится тр': True, 'острая боль в животе': True, 'асимметрия лица и нарушилась': True, 'Мало двигаюсь, плохо сплю, о': False}
+  flow normal calls= ['models', 'chat/completions'] banner= None status=  statusHTML= <div class="status-box"><span>Готово. План сформирован локально на <b>llama.cpp< planKids= 6 planContentKids= 0 messagesKids= 0 errBox= False emerg= {'hidden': False}
+  flow redflag calls= [] banner= {'hidden': True, 'dataset': {'visible': 'true'}, 'text': ''} status=  statusHTML=  planKids= 0 planContentKids= 0 messagesKids= 0 errBox= False emerg= {'hidden': False}
+  flow redflag2 calls= [] banner= {'hidden': True, 'dataset': {'visible': 'true'}, 'text': ''} status=  statusHTML=  planKids= 0 planContentKids= 0 messagesKids= 0 errBox= False emerg= {'hidden': False}
+  flow down calls= ['chat/completions'] banner= None status=  statusHTML= <div class="status-box"><span><b>Модель недоступна.</b> fetch failed</span></div planKids= 0 planContentKids= 0 messagesKids= 0 errBox= False emerg= {'hidden': False}
+== artur load: None
+ redflags: {'болит грудь': False, 'сильная боль в груди': True, 'одышка при обычной ходьбе': True, 'идёт кровотечение из носа': True, 'потерял сознание на минуту': True, 'суицидальные мысли, не хочу ': True, 'температура 39.5 держится тр': True, 'острая боль в животе': True, 'асимметрия лица и нарушилась': True, 'Мало двигаюсь, плохо сплю, о': False}
+  flow normal calls= ['models', 'chat/completions'] banner= None status=  statusHTML=  planKids= 0 planContentKids= 1 messagesKids= 0 errBox= True emerg= {'hidden': True}
+  flow redflag calls= ['chat/completions'] banner= {'hidden': True, 'dataset': {}, 'text': ''} status=  statusHTML=  planKids= 0 planContentKids= 1 messagesKids= 0 errBox= True emerg= {'hidden': True}
+  flow redflag2 calls= [] banner= {'hidden': True, 'dataset': {}, 'text': ''} status=  statusHTML=  planKids= 0 planContentKids= 0 messagesKids= 0 errBox= True emerg= {'hidden': False}
+  flow down calls= ['chat/completions'] banner= None status=  statusHTML=  planKids= 0 planContentKids= 0 messagesKids= 0 errBox= False emerg= {'hidden': True}
+== crashmax load: None
+ redflags: {'болит грудь': True, 'сильная боль в груди': True, 'одышка при обычной ходьбе': True, 'идёт кровотечение из носа': True, 'потерял сознание на минуту': True, 'суицидальные мысли, не хочу ': True, 'температура 39.5 держится тр': True, 'острая боль в животе': True, 'асимметрия лица и нарушилась': True, 'Мало двигаюсь, плохо сплю, о': False}
+  flow normal calls= ['models', 'chat/completions'] banner= None status= План собран локально · gemma-4-e2b-agent statusHTML=  planKids= 0 planContentKids= 0 messagesKids= 0 errBox= False emerg= {'hidden': False}
+  flow redflag calls= [] banner= {'hidden': False, 'dataset': {}, 'text': ''} status=  statusHTML=  planKids= 0 planContentKids= 0 messagesKids= 0 errBox= False emerg= {'hidden': False}
+  flow redflag2 calls= [] banner= {'hidden': False, 'dataset': {}, 'text': ''} status=  statusHTML=  planKids= 0 planContentKids= 0 messagesKids= 0 errBox= False emerg= {'hidden': False}
+  flow down calls= ['chat/completions'] banner= None status= LLM недоступен. fetch failed statusHTML=  planKids= 0 planContentKids= 0 messagesKids= 0 errBox= False emerg= {'hidden': False}
+== kopytov load: None
+ redflags: {'болит грудь': False, 'сильная боль в груди': True, 'одышка при обычной ходьбе': True, 'идёт кровотечение из носа': True, 'потерял сознание на минуту': False, 'суицидальные мысли, не хочу ': True, 'температура 39.5 держится тр': True, 'острая боль в животе': True, 'асимметрия лица и нарушилась': True, 'Мало двигаюсь, плохо сплю, о': False}
+  flow normal calls= ['models', 'chat/completions'] banner= None status=  statusHTML=  planKids= 0 planContentKids= 0 messagesKids= 2 errBox= False emerg= {'hidden': False}
+  flow redflag calls= ['models', 'chat/completions'] banner= {'hidden': True, 'dataset': {}, 'text': ''} status=  statusHTML=  planKids= 0 planContentKids= 0 messagesKids= 2 errBox= False emerg= {'hidden': False}
+  flow redflag2 calls= [] banner= {'hidden': False, 'dataset': {}, 'text': ''} status=  statusHTML=  planKids= 0 planContentKids= 0 messagesKids= 2 errBox= False emerg= {'hidden': False}
+  flow down calls= ['models', 'http://localhost:8000/v3/models'] banner= None status= LLM недоступен. Локальный сервер не отвечает на localhost:8000. Запустите: docke statusHTML=  planKids= 0 planContentKids= 0 messagesKids= 1 errBox= False emerg= {'hidden': False}
+== mira load: None
+ redflags: {'болит грудь': False, 'сильная боль в груди': True, 'одышка при обычной ходьбе': False, 'идёт кровотечение из носа': False, 'потерял сознание на минуту': False, 'суицидальные мысли, не хочу ': True, 'температура 39.5 держится тр': False, 'острая боль в животе': False, 'асимметрия лица и нарушилась': False, 'Мало двигаюсь, плохо сплю, о': False}
+  flow normal calls= ['models', 'chat/completions'] banner= None status=  statusHTML=  planKids= 0 planContentKids= 0 messagesKids= 0 errBox= False emerg= {'hidden': False}
+  flow redflag calls= ['chat/completions'] banner= {'hidden': True, 'display': 'none', 'dataset': {}, 'text': ''} status=  statusHTML=  planKids= 0 planContentKids= 0 messagesKids= 0 errBox= False emerg= {'hidden': False}
+  flow redflag2 calls= [] banner= {'hidden': True, 'display': 'block', 'dataset': {}, 'text': ''} status=  statusHTML=  planKids= 0 planContentKids= 0 messagesKids= 0 errBox= False emerg= {'hidden': False}
+  flow down calls= ['chat/completions'] banner= None status= Ошибка: fetch failed statusHTML=  planKids= 0 planContentKids= 0 messagesKids= 0 errBox= False emerg= {'hidden': False}
+== self369heal-cmyk load: None
+ redflags: {'болит грудь': True, 'сильная боль в груди': True, 'одышка при обычной ходьбе': True, 'идёт кровотечение из носа': True, 'потерял сознание на минуту': True, 'суицидальные мысли, не хочу ': True, 'температура 39.5 держится тр': True, 'острая боль в животе': True, 'асимметрия лица и нарушилась': True, 'Мало двигаюсь, плохо сплю, о': False}
+  flow normal calls= ['models', 'chat/completions'] banner= None status=  statusHTML= <span></span> planKids= 0 planContentKids= 0 messagesKids= 0 errBox= False emerg= {'hidden': False}
+  flow redflag calls= [] banner= {'hidden': False, 'dataset': {}, 'text': ''} status=  statusHTML= <span></span> planKids= 0 planContentKids= 0 messagesKids= 0 errBox= False emerg= {'hidden': False}
+  flow redflag2 calls= [] banner= {'hidden': False, 'dataset': {}, 'text': ''} status=  statusHTML= <span></span> planKids= 0 planContentKids= 0 messagesKids= 0 errBox= False emerg= {'hidden': False}
+  flow down calls= ['chat/completions'] banner= None status=  statusHTML= <span>LLM недоступен: соединение с localhost:8000 прервалось.</span> planKids= 0 planContentKids= 0 messagesKids= 0 errBox= False emerg= {'hidden': False}
+[0m
+[0m# [0mTodos
+[✓] Static analysis: read all 6 index.html files
+[✓] Verify network targets (grep fetch), red-flag gates, disclaimer
+[✓] Live test: serve pages, replicate JS calls against port 8000
+[✓] Test red-flag path + degraded path per entry
+[✓] Score and emit final JSON
+[0m
+{
+  "judge_id": "opencode-go/glm-5.3-flash",
+  "tested_via": "curl+code",
+  "scores": [
+    {
+      "participant": "Olyshka",
+      "criteria": {
+        "functionality": 8.5,
+        "redflag_safety": 9.0,
+        "disclaimer_prompt_quality": 9.5,
+        "privacy_architecture": 10.0,
+        "ux_resilience": 9.0,
+        "code_security_complexity": 9.0
+      },
+      "summary_score": 9.19,
+      "notes": "Live call produced a well-structured sectioned plan; red-flag gate (ё-normalized, Cyrillic-aware, catches «болит грудь» and «болит живот» in executed-node test) fires pre-LLM with spec banner; verbatim disclaimer on page, in plan and forced into LLM output format; only-localhost fetches, safe textContent rendering, elapsed-timer loading and clean error state."
+    },
+    {
+      "participant": "self369heal-cmyk",
+      "criteria": {
+        "functionality": 9.0,
+        "redflag_safety": 9.0,
+        "disclaimer_prompt_quality": 9.0,
+        "privacy_architecture": 10.0,
+        "ux_resilience": 9.0,
+        "code_security_complexity": 9.5
+      },
+      "summary_score": 9.25,
+      "notes": "Best overall: CSP meta restricts connect-src to localhost:8000, executed red-flag classifier scored 13/16 with labeled reasons in the exact-spec banner, live call returned a coherent structured plan, and it uniquely handles timeouts, 400-fallback, finish_reason=length, empty answers plus escape-first markdown rendering and prompt-injection rule."
+    },
+    {
+      "participant": "artur",
+      "criteria": {
+        "functionality": 8.0,
+        "redflag_safety": 6.5,
+        "disclaimer_prompt_quality": 8.0,
+        "privacy_architecture": 10.0,
+        "ux_resilience": 9.5,
+        "code_security_complexity": 9.0
+      },
+      "summary_score": 8.41,
+      "notes": "Polished UX (connection pill, abort/timeout, goal validation, copy-plan) and clean textContent rendering with verbatim disclaimer, but the executed red-flag regex set (11/16) misses the mandated case «болит грудь» as well as «давление в груди», «болит живот» and stroke phrasings, so the LLM gets called on them."
+    },
+    {
+      "participant": "crashmax",
+      "criteria": {
+        "functionality": 7.5,
+        "redflag_safety": 8.0,
+        "redflag-normalized": null,
+        "disclaimer_prompt_quality": 8.5,
+        "privacy_architecture": 10.0,
+        "ux_resilience": 7.5,
+        "code_security_complexity": 8.5
+      },
+      "summary_score": 8.38,
+      "notes": "Solid normalized gate (12/16, catches «болит грудь») with verbatim disclaimer and structured 5-section prompt, but no fetch timeout risks an eternal spinner if the server stalls, the form is wholly disabled during generation, and the live response showed heavy model degeneration that its markdown renderer faithfully reproduced."
+    },
+    {
+      "participant": "kopytov",
+      "criteria": {
+        "functionality": 8.0,
+        "redflag_safety": 6.0,
+        "disclaimer_prompt_quality": 6.0,
+        "privacy_architecture": 10.0,
+        "ux_resilience": 9.0,
+        "code_security_complexity": 8.5
+      },
+      "summary_score": 7.81,
+      "notes": "Most ambitious entry (chat app with history, retry, localStorage schema validation, prompt-injection-hardened dual-mode prompts) but the executed gate (11/16) misses the mandated «болит грудь», «потерял сознание», «болит живот», and the mandatory verbatim disclaimer is absent — only «Не заменяет консультацию врача.» is shown."
+    },
+    {
+      "participant": "mira",
+      "criteria": {
+        "functionality": 5.5,
+        "redflag_safety": 3.0,
+        "disclaimer_prompt_quality": 4.0,
+        "privacy_architecture": 10.0,
+        "ux_resilience": 5.0,
+        "code_security_complexity": 5.0
+      },
+      "summary_score": 5.47,
+      "notes": "Only the verbatim footer disclaimer was added to the untouched template: one-line TODO-driven system prompt, a 2-pattern gate whose executed test (3/16) misses «болит грудь», dyspnea, bleeding, fainting, fever and stroke, plus no empty-response handling, timeouts or output formatting."
+    }
+  ],
+  "own_confidence": 0.86
+}
+[0m$ [0mls -la /tmp/opencode/prompts/ && python3 -c "
+import json
+for p in ['Olyshka','crashmax','mira','self369heal-cmyk','kopytov','artur']:
+    d=json.load(open(f'/tmp/opencode/prompts/{p}.json'))
+    print('==',p,'system?',bool(d.get('system')),'user?',bool(d.get('user')))
+    print('SYS:',repr((d.get('system') or '')[:160]))
+    print('USR:',repr((d.get('user') or '')[:200]))
+"
+total 28
+drwxr-xr-x    1 root     root           154 Oct 22 18:16 .
+drwxr-xr-x    1 root     root          1172 Oct 22 18:17 ..
+-rw-r--r--    1 root     root          2945 Oct 22 18:17 Olyshka.json
+-rw-r--r--    1 root     root          2429 Oct 22 18:17 artur.json
+-rw-r--r--    1 root     root          2048 Oct 22 18:17 crashmax.json
+-rw-r--r--    1 root     root          4651 Oct 22 18:17 kopytov.json
+-rw-r--r--    1 root     root           487 Oct 22 18:17 mira.json
+-rw-r--r--    1 root     root          2850 Oct 22 18:17 self369heal-cmyk.json
+== Olyshka system? True user? True
+SYS: 'Ты — ассистент по профилактической медицине. Ты НЕ врач и НЕ ставишь диагнозы.\nТвоя задача — составить безопасный персональный план профилактики, а не лечить.\n\n'
+USR: 'Возраст: 35 лет.\nУровень физической активности: средний.\nЦели профилактики: двигательная активность, питание, профилактические обследования, сон.\n\nСамочувствие, жалобы и образ жизни (со слов пользоват'
+== crashmax system? True user? True
+SYS: 'Ты помощник по превентивной медицине. Отвечай только по-русски.\nМатериал образовательный: это не диагноз, не назначение и не замена очному врачу.\nЗапрещено: ста'
+USR: 'Составь персональный план профилактики на 4 недели.\nВозраст: 35 лет.\nУровень активности: средний.\nЦели: двигательная активность, питание, профилактические обследования, сон.\nСамочувствие, жалобы, обра'
+== mira system? True user? True
+SYS: 'Составь персональный план профилактики по целям пользователя.'
+USR: 'Возраст: 35. Активность: средний. Цели: двигательная активность, питание, профилактические обследования, сон. Мало двигаюсь, сплю по 6 часов, офисная работа, есть лишний вес.'
+== self369heal-cmyk system? True user? True
+SYS: 'Ты — помощник по профилактике здоровья для взрослых. Отвечаешь только на русском языке.\nТвоя задача — составить понятный персональный план здоровых привычек по '
+USR: 'Анкета пользователя:\n- Возраст (полных лет): 35\n- Уровень физической активности: средний\n- Цели профилактики (разделы плана в этом порядке): двигательная активность; питание; профилактические обследов'
+== kopytov system? True user? True
+SYS: 'Ты — помощник по профилактике и здоровому образу жизни. Отвечай по-русски.\nНе ставь диагнозы, не назначай и не называй лекарства, дозировки и схемы лечения; не '
+USR: 'Данные пользователя:\n- Возраст: 35 лет\n- Уровень физической активности: средний\n- Цели профилактики: двигательная активность, питание, профилактические обследования, сон\n- Самочувствие, жалобы, образ '
+== artur system? False user? True
+SYS: ''
+USR: 'Составь бережный образовательный план профилактических привычек на 7 дней.\n\nДанные: возраст 35 лет; текущая активность — средний; выбранные цели — двигательная активность, питание, профилактические об'
+[0m
+[0m$ [0mcd /tmp/opencode && python3 - <<'EOF'
+import json,re
+src=open('/workspace/artur/index.html').read()
+m=re.search(r'role:\s*"system",\s*content:\s*("(?:[^"\\]|\\.)*")',src)
+sys_prompt=json.loads(m.group(1)) if m else None
+d=json.load(open('prompts/artur.json'))
+d['system']=sys_prompt
+json.dump(d,open('prompts/artur.json','w'),ensure_ascii=False,indent=1)
+print(repr(sys_prompt))
+EOF
+'Ты помощник по образовательной профилактике и формированию повседневных привычек. Не являешься врачом. Не диагностируй, не назначай лечение и лекарства. Отвечай бережно, ясно и без категоричных медицинских утверждений.'
+[0m
+[0m← [0mWrite /tmp/opencode/live.py
+Wrote file successfully.
+[0m
+[0m$ [0mcd /tmp/opencode && nohup python3 live.py > live.log 2>&1 &
+echo started
+started
+[0m
+[0m$ [0mcd /workspace && echo "--- external URLs / src / href:"; grep -n -E "https?://(?!localhost)" -P */index.html | grep -v -E "^\s*$" | head -40; echo "--- script src / link rel:"; grep -n -E "<script[^>]+src=|<link[^>]+href=" */index.html; echo "--- hardcoded model ids:"; grep -n -E "gemma|llama-3|qwen|smolvlm|mistral" -i */index.html | grep -v -i "llama\.cpp\|--profile" | head -20; echo "--- localStorage/beacon/xhr:"; grep -n -E "localStorage|XMLHttpRequest|sendBeacon|WebSocket|import\(" */index.html | head -20
+--- external URLs / src / href:
+grep: unrecognized option: P
+--- script src / link rel:
+--- hardcoded model ids:
+BusyBox v1.37.0 (2026-01-10 15:38:28 UTC) multi-call binary.
+
+Usage: grep [-HhnlLoqvsrRiwFE] [-m N] [-A|B|C N] { PATTERN | -e PATTERN... | -f FILE... } [FILE]...
+
+Search for PATTERN in FILEs (or stdin)
+
+	-H	Add 'filename:' prefix
+	-h	Do not add 'filename:' prefix
+	-n	Add 'line_no:' prefix
+	-l	Show only names of files that match
+	-L	Show only names of files that don't match
+	-c	Show only count of matching lines
+	-o	Show only the matching part of line
+	-q	Quiet. Return 0 if PATTERN is found, 1 otherwise
+	-v	Select non-matching lines
+	-s	Suppress open and read errors
+	-r	Recurse
+	-R	Recurse and dereference symlinks
+	-i	Ignore case
+	-w	Match whole words only
+	-x	Match whole lines only
+	-F	PATTERN is a literal (not regexp)
+	-E	PATTERN is an extended regexp
+	-m N	Match up to N times per file
+	-A N	Print N lines of trailing context
+	-B N	Print N lines of leading context
+	-C N	Same as '-A N -B N'
+	-e PTRN	Pattern to match
+	-f FILE	Read pattern from file
+crashmax/index.html:372:      // LM Studio (Qwen 3.5, Bonsai) пишет цепочку в reasoning_content и оставляет
+self369heal-cmyk/index.html:278:    // Gemma 4 по умолчанию сначала «думает» по-английски: это съедает лимит
+--- localStorage/beacon/xhr:
+kopytov/index.html:279:      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+kopytov/index.html:290:    function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (_) { storageWarning(); } }
+kopytov/index.html:393:      try { localStorage.removeItem(STORAGE_KEY); } catch (_) { storageWarning(); }
+[0m
+[0m$ [0mcd /workspace && wc -c */index.html && echo "--- TODO left:"; grep -c "TODO" */index.html
+30990 Olyshka/index.html
+    56472 artur/index.html
+    21764 crashmax/index.html
+     9465 example/index.html
+    34318 kopytov/index.html
+    11916 mira/index.html
+    30440 self369heal-cmyk/index.html
+   195365 total
+--- TODO left:
+Olyshka/index.html:0
+artur/index.html:0
+crashmax/index.html:0
+example/index.html:8
+kopytov/index.html:0
+mira/index.html:7
+self369heal-cmyk/index.html:0
+[0m
+[0m$ [0mcd /workspace && grep -n -E "https?://" */index.html | grep -v "localhost" | head -30; echo "=== src/href attrs:"; grep -n -E "<(script|link|img|iframe)[^>]*(src|href)=" */index.html | head; echo "=== fetch urls:"; grep -n -E "BASE_URL|baseUrl" */index.html | grep -E "http" 
+artur/index.html:209:    select.control { appearance: none; padding-right: 40px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m4 6 4 4 4-4' stroke='%23566157' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 13px center; }
+=== src/href attrs:
+=== fetch urls:
+Olyshka/index.html:336:      { name: "llama.cpp", BASE_URL: "http://localhost:8000/v1" },
+Olyshka/index.html:337:      { name: "OVMS",      BASE_URL: "http://localhost:8000/v3" }
+artur/index.html:648:      { name: "Локальная модель", baseUrl: "http://localhost:8000/v1" }
+crashmax/index.html:336:      { name: "llama.cpp", BASE_URL: "http://localhost:8000/v1" },
+crashmax/index.html:337:      { name: "OVMS",      BASE_URL: "http://localhost:8000/v3" }
+example/index.html:64:      { name: "llama.cpp", BASE_URL: "http://localhost:8000/v1" },
+example/index.html:65:      { name: "OVMS",      BASE_URL: "http://localhost:8000/v3" }
+kopytov/index.html:143:      { name: "llama.cpp", BASE_URL: "http://localhost:8000/v1" },
+kopytov/index.html:144:      { name: "OVMS",      BASE_URL: "http://localhost:8000/v3" }
+mira/index.html:86:      { name: "llama.cpp", BASE_URL: "http://localhost:8000/v1" },
+mira/index.html:87:      { name: "OVMS",      BASE_URL: "http://localhost:8000/v3" }
+self369heal-cmyk/index.html:254:      { name: "llama.cpp", BASE_URL: "http://localhost:8000/v1" },
+self369heal-cmyk/index.html:255:      { name: "OVMS",      BASE_URL: "http://localhost:8000/v3" }
+[0m
+[0m$ [0msleep 45; cat /tmp/opencode/live.log
+(no output)
+[0m
+[0m$ [0msleep 60; ps aux | grep -c "[l]ive.py"; cat /tmp/opencode/live.log; ls -la /tmp/opencode/live-results.json 2>/dev/null
+1
+[0m
+[0m$ [0msleep 90; ps aux | grep -c "[l]ive.py"; cat /tmp/opencode/live.log; ls -la /tmp/opencode/live-results.json 2>/dev/null
+0
+Olyshka True 18.6 1374
+crashmax True 19.4 1582
+artur True 6.9 492
+kopytov True 14.2 1150
+mira True 81.9 5428
+self369heal-cmyk True 15.5 1075
+done
+-rw-r--r--    1 root     root         15291 Oct 22 18:21 /tmp/opencode/live-results.json
+[0m
+[0m$ [0mcd /tmp/opencode && python3 -c "
+import json
+d=json.load(open('live-results.json'))
+for p,v in d.items():
+    print('='*20,p,v['sec'],'s len',v['len'],'finish',v.get('finish'))
+    print(v['content'][:1400])
+    print()
+"
+==================== Olyshka 18.6 s len 1374 finish stop
+## Активность
+- 1. Включите в свою ежедневную рутину 15-минутные прогулки на свежем воздухе (ходьба, спуск в парк, пешие прогулки) как минимум 3 раза в неделю.
+- 2. В течение рабочего дня старайтесь делать 5-минутные разминки или небольшие растяжки, чтобы избежать застойности.
+- 3. По возможности старайтесь снижать время сидячей работы, чтобы увеличить двигательную активность.
+- 4. Регулярно старайтесь менять положение тела, чтобы избежать длительного нахождения в одной позе.
+
+## Питание
+- 1. Включите в рацион 5-7 порций свежих, нежирных продуктов в день.
+- 2. Старайтесь включать в рацион больше овощей и фруктов для обеспечения организма витаминами.
+- 3. Ограничьте потребление продуктов с высоким содержанием жиров и обработанных продуктов.
+- 4. Старайтесь следить за тем, чтобы вводить в рацион больше цельнозерновых продуктов.
+
+## Обследования
+- 1. Регулярно проходите диспансеризацию в соответствии с возрастными нормами для оценки состояния здоровья.
+- 2. Регулярно проходите обследования в соответствии с возрастными нормами для оценки состояния здоровья.
+- 3. Регулярно проходите обследования в соответствии с возрастными нормами для оценки состояния здоровья.
+- 4. Регулярно проходите обследования в соответствии с возрастными нормами для оценки состояния здоровья.
+
+## Важно
+- Материал носит образовательный характер и не является медицинской рекомендацией.
+
+==================== crashmax 19.4 s len 1582 finish stop
+## Движение
+- - Увеличьте ежедневную активность, чтобы компенсировать сидячий образ жизни.
+- - Включите в свою рутину регулярные короткие прогулки в течение дня.
+- - Планируйте небольшие, но регулярные нагрузки, подходящие для вашего уровня активности.
+- - Запланируйте разнообразие в физической активности, чтобы избежать застоя.
+
+## Питание
+- - Сбалансируйте рацион с акцентом на снижение избыточного веса.
+- - Вносите изменения в ежедневное питание, чтобы достичь желаемого результата.
+- - Планируйте сбалансированное питание, учитывая ваши текущие потребности.
+- - Следите за сбалансированностью в питании, чтобы обеспечить поддержку организма.
+
+## Обследования
+- - Проводите плановые профилактические осмотры, соответствующие вашему возрасту.
+- - Регулярно проводите профилактические осмотры, соответствующие вашему возрасту.
+- - Следите за профилактическими осмотрами, соответствующими вашему возрасту.
+- - Обеспечьте выполнение профилактических осмотров, соответствующим вашему возрасту.
+
+## Сон
+- - Наладьте режим сна, чтобы компенсировать недостаток сна.
+- - Внесите корректировки в режим сна, чтобы восполнить дефицит.
+- - Планируйте изменения в режим сна, чтобы восполнить недостаток.
+- - Следите за корректировками в режиме сна, чтобы восполнить недостаток.
+
+## На что обратить внимание
+- - Обращайте внимание на коррекцию в двигательной активности для достижения цели.
+- - Следите за кор
+
+==================== artur 6.9 s len 492 finish stop
+План на неделю
+
+Пн — Начать ежедневную легкую активность.
+Вт — Добавить больше движения в течение рабочего дня.
+Вт — Удели больше внимания сбалансированному питанию.
+Ср — Удели больше внимания качественному сну.
+Чт — Удели больше внимания двигательной активности.
+Пт — Удели больше внимания питанию.
+Сб — Удели больше внимания сну.
+Вс — Удели больше внимания движению.
+
+Первый шаг — Внедряйте в свою рутину небольшие, но последовательные изменения, чтобы укрепить свои положительные привычки.
+
+==================== kopytov 14.2 s len 1150 finish stop
+Ваш фокус — создание сбалансированного плана для достижения ваших целей в области активности, питания, сна и контроля состояния.
+
+**Активность**
+*   Регулярно старайтесь включать в свою деятельность больше двигательной активности в течение рабочего дня.
+*   Поскольку ваша работа офисная, постарайтесь находить возможности для увеличения движения, даже если это небольшие перерывы.
+
+**Питание**
+*   Обращайте внимание на сбалансированное и здоровое питание для коррекции лишнего веса.
+*   Планируйте своё питание таким образом, чтобы оно способствовало достижению ваших целей по питанию.
+
+**Обследования
+*   Запланируйте проведение профилактических обследований для оценки вашего состояния.
+*   Определите и зафиксируйте необходимые профилактические обследования.
+
+**Сон
+*   Налажьте режим сна для улучшения вашего самочувствия.
+*   Соблюдайте последовательный режим сна, чтобы обеспечить организм достаточным отдыхом.
+
+**Первый шаг**
+*   Начните с систематизации режима дня, чтобы учесть ваши цели.
+
+Чтобы составить максимально полезный план, пожалуйста, уточните: какие конкретные аспекты вашего текущего самочувствия требуют немедленной коррекции?
+
+==================== mira 81.9 s len 5428 finish stop
+## Персональный План Профилактики (35 лет, Офисная Работа, Низкая Активность)
+
+**Имя:** [Место для имени]
+**Возраст:** 35 лет
+**Текущая Активность:** Средняя (Снижается из-за сидячей работы)
+**Ключевые Цели:**
+1. **Увеличение двигательной активности** (Борьба с гиподинамией).
+2. **Коррекция питания** (Снижение потребления калорий и обработанных продуктов).
+3. **Оптимизация сна** (Достижение 7-9 часов качественного сна).
+4. **Профилактика и Раннее Выявление Рисков** (Регулярные обследования).
+5. **Снижение избыточного веса** (Постепенное снижение индекса массы тела).
+
+---
+
+### 1. Анализ Текущей Ситуации (Чек-лист)
+
+| Параметр | Текущее Состояние | Риски / Проблемы |
+| :--- | :--- | :--- |
+| **Физическая активность** | Низкая (Сидячая работа) | Хроническая усталость, снижение настроения, риски ОРВИ. |
+| **Питание** | Несбалансированное/Режимное | Набор веса, нарушение циркадных ритмов из-за работы. |
+| **Сон** | Недостаточный (≈6 часов) | Снижение когнитивных функций, снижение настроения, метаболические сбои. |
+| **Вес/Телосложение** | Превышение нормы (Лишний вес) | Риски развития диабетического/сердечно-сосудистых заболеваний. |
+
+---
+
+### 2. Стратегии и Планы Действий
+
+#### Цель 1: Увеличение Двигательной Активности (Борьба с Гиподинамией)
+
+**Проблема:** Длительное сидение за столом.
+**Метод:** Интеграция движения в рабочий процесс и быт.
+
+| Что делать (Конкретные шаги) | Как ч
+
+==================== self369heal-cmyk 15.5 s len 1075 finish stop
+## Резюме
+План составлен для улучшения самочувствия через коррекцию режима дня, активности и образа жизни.
+
+## Двигательная активность
+*   Планируйте ежедневную двигательную активность.
+*   Включите в распорядок дня 30-минутные прогулки на свежем воздухе 5 раз в неделю.
+*   Включите 15-минутные разминки или растяжку 3 раза в неделю.
+*   Обеспечьте снижение времени сидения в постели 6 часов к 7 часам.
+
+## Питание
+*   Ограничьте потребление продуктов с избыточным весом.
+*   Планируйте сбалансированное питание с учетом вашей физической активности.
+*   Обеспечьте потребление свежей и чистой пищи.
+*   Ограничьте потребление продуктов, способствующих на набор лишнего веса.
+
+##Профилактические обследования
+*   Проведите комплексную диспансеризацию.
+*   Сдайте необходимые анализы крови и мочи.
+*   Проведите осмотры по возрасту и состоянию здоровья.
+
+##Когда обратиться к врачу
+*   Регулярно обсуждайте результаты обследований с терапевтом.
+*   Своевременно информируйте врача о любых изменениях в самочувствии.
+*   Консультируйтесь с терапевтом по поводу имеющихся жалоб.
+[0m
+[0m$ [0mpkill -f "http.server 8080"; python3 - <<'EOF'
+scores = {
+ "Olyshka":      [9.0,9.5,9.5,9.5,9.0,8.5],
+ "artur":        [9.0,6.5,7.0,9.5,9.5,9.0],
+ "crashmax":     [9.0,9.5,9.5,9.5,9.0,9.0],
+ "kopytov":      [8.0,6.0,5.5,9.5,9.5,9.0],
+ "mira":         [6.5,3.0,3.5,9.5,5.5,6.0],
+ "self369heal-cmyk":[9.0,9.5,9.5,10.0,9.5,9.5],
+}
+for k,v in scores.items():
+    s=(1.5*sum(v[:4])+1.0*sum(v[4:]))/8
+    print(k, round(s,2))
+EOF
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mpython3 -c "
+scores = {'Olyshka':[9.0,9.5,9.5,9.5,9.0,8.5],'artur':[9.0,6.5,7.0,9.5,9.5,9.0],'crashmax':[9.0,9.5,9.5,9.5,9.0,9.0],'kopytov':[8.0,6.0,5.5,9.5,9.5,9.0],'mira':[6.5,3.0,3.5,9.5,5.5,6.0],'self369heal-cmyk':[9.0,9.5,9.5,10.0,9.5,9.5]}
+for k,v in scores.items(): print(k, round((1.5*sum(v[:4])+sum(v[4:]))/8,2))
+"
+Olyshka 9.22
+artur 8.31
+crashmax 9.28
+kopytov 7.75
+mira 5.66
+self369heal-cmyk 9.5
+[0m
+[0m$ [0mcurl -s -o /dev/null -m 2 -w "8080:%{http_code}\n" http://localhost:8080/Olyshka/index.html || echo "8080 down"
+8080:000
+8080 down
+[0m
+{
+  "judge_id": "opencode-go/mimo-v2.6-flash",
+  "tested_via": "curl+code",
+  "scores": [
+    {
+      "participant": "Olyshka",
+      "criteria": {
+        "functionality": 9.0,
+        "redflag_safety": 9.5,
+        "disclaimer_prompt_quality": 9.5,
+        "privacy_architecture": 9.5,
+        "ux_resilience": 9.0,
+        "code_security_complexity": 8.5
+      },
+      "summary_score": 9.22,
+      "notes": "Full form->live plan verified via curl (18.6s, structured sections + disclaimer), red-flag battery 9/9 including the required 'болит грудь' blocks the request before any fetch, verbatim disclaimer shown 3 times, only localhost:8000, elapsed-second loader and clear error state; minor: live plan missed the 'Сон' section, status line uses innerHTML with err.message and no prompt-injection guard."
+    },
+    {
+      "participant": "artur",
+      "criteria": {
+        "functionality": 9.0,
+        "redflag_safety": 6.5,
+        "disclaimer_prompt_quality": 7.0,
+        "privacy_architecture": 9.5,
+        "ux_resilience": 9.5,
+        "code_security_complexity": 9.0
+      },
+      "summary_score": 8.31,
+      "notes": "Polished 7-day plan flow with timeouts/copy/focus handling and textContent-only rendering, but the required test phrase 'болит грудь' is NOT matched by isRedFlag, so the page really sent a chat/completions request and rendered a plan instead of the doctor banner, and the system prompt is a single short sentence with structure only in the user prompt."
+    },
+    {
+      "participant": "crashmax",
+      "criteria": {
+        "functionality": 9.0,
+        "redflag_safety": 9.5,
+        "disclaimer_prompt_quality": 9.5,
+        "privacy_architecture": 9.5,
+        "ux_resilience": 9.0,
+        "code_security_complexity": 9.0
+      },
+      "summary_score": 9.28,
+      "notes": "Red-flag battery 9/9 with zero fetches on both red-flag simulations and banner 'Немедленно обратитесь к врачу / 103', verbatim disclaimer, strict 5-section system prompt reproduced live (19.4s), escapeHtml-escaped markdown renderer and empty-content/reasoning fallbacks; only lacking an elapsed-time ticker in the loader."
+    },
+    {
+      "participant": "kopytov",
+      "criteria": {
+        "functionality": 8.0,
+        "redflag_safety": 6.0,
+        "disclaimer_prompt_quality": 5.5,
+        "privacy_architecture": 9.5,
+        "ux_resilience": 9.5,
+        "code_security_complexity": 9.0
+      },
+      "summary_score": 7.75,
+      "notes": "Working chat-style plan generator with excellent anti-injection safety rules and retry/timeout UX, but the mandatory verbatim disclaimer is absent (0 occurrences), goals are toggle buttons instead of checkboxes, and 'болит грудь' passes the gate and hits the LLM (battery 7/9, also 'потерял сознание' missed)."
+    },
+    {
+      "participant": "mira",
+      "criteria": {
+        "functionality": 6.5,
+        "redflag_safety": 3.0,
+        "disclaimer_prompt_quality": 3.5,
+        "privacy_architecture": 9.5,
+        "ux_resilience": 5.5,
+        "code_security_complexity": 6.0
+      },
+      "summary_score": 5.66,
+      "notes": "Essentially the untouched template (7 TODOs, 61-char system prompt): only 2 of 9 red-flag categories covered, so 'болит грудь' sends the request and keeps the banner hidden (verified by fetch spy), output is an unformatted 5.4k-char blob with no request timeout, though privacy, runtime model discovery and the verbatim disclaimer still hold."
+    },
+    {
+      "participant": "self369heal-cmyk",
+      "criteria": {
+        "functionality": 9.0,
+        "redflag_safety": 9.5,
+        "disclaimer_prompt_quality": 9.5,
+        "privacy_architecture": 10.0,
+        "ux_resilience": 9.5,
+        "code_security_complexity": 9.5
+      },
+      "summary_score": 9.5,
+      "notes": "Best-in-class: CSP connect-src locked to localhost:8000, red-flag battery 9/9 with named reasons and zero network calls before the banner, verbatim disclaimer twice, structured live plan (15.5s) from a system prompt with an explicit anti-injection rule, escaped markdown renderer, 180s timeout with readable errors; only cosmetic heading-hash rendering quirks in the model reply."
+    }
+  ],
+  "own_confidence": 0.85
+}
+Judge exit codes: 0 0 0
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+  File "/usr/lib/python3.14/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/lib/python3.14/json/decoder.py", line 348, in decode
+    raise JSONDecodeError("Extra data", s, end)
+json.decoder.JSONDecodeError: Extra data: line 2 column 1 (char 110)
