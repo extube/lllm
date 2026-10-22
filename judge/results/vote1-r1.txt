@@ -1,0 +1,6 @@
+{"judge_id": "opencode-go/glm-5.3-flash", "agree": true}
+
+-- STDERR --
+[0m
+> build · glm-5.3-flash
+[0m

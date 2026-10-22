@@ -1,0 +1,6 @@
+{"judge_id":"opencode-go/mimo-v2.6-flash","agree":true}
+
+-- STDERR --
+[0m
+> build · mimo-v2.6-flash
+[0m

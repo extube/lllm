@@ -1,0 +1,14 @@
+[
+  {
+    "judge_id": "opencode-go/glm-5.3-flash",
+    "agree": true
+  },
+  {
+    "judge_id": "opencode-go/mimo-v2.6-flash",
+    "agree": true
+  },
+  {
+    "judge_id": "qwen3.7-plus",
+    "agree": true
+  }
+]

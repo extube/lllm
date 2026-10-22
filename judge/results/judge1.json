@@ -1,0 +1,86 @@
+{
+  "judge_id": "opencode-go/glm-5.3-flash",
+  "tested_via": "curl+code",
+  "scores": [
+    {
+      "participant": "Olyshka",
+      "criteria": {
+        "functionality": 8.5,
+        "redflag_safety": 9.0,
+        "disclaimer_prompt_quality": 9.5,
+        "privacy_architecture": 10.0,
+        "ux_resilience": 9.0,
+        "code_security_complexity": 9.0
+      },
+      "summary_score": 9.19,
+      "notes": "Live call produced a well-structured sectioned plan; red-flag gate (ё-normalized, Cyrillic-aware, catches «болит грудь» and «болит живот» in executed-node test) fires pre-LLM with spec banner; verbatim disclaimer on page, in plan and forced into LLM output format; only-localhost fetches, safe textContent rendering, elapsed-timer loading and clean error state."
+    },
+    {
+      "participant": "self369heal-cmyk",
+      "criteria": {
+        "functionality": 9.0,
+        "redflag_safety": 9.0,
+        "disclaimer_prompt_quality": 9.0,
+        "privacy_architecture": 10.0,
+        "ux_resilience": 9.0,
+        "code_security_complexity": 9.5
+      },
+      "summary_score": 9.25,
+      "notes": "Best overall: CSP meta restricts connect-src to localhost:8000, executed red-flag classifier scored 13/16 with labeled reasons in the exact-spec banner, live call returned a coherent structured plan, and it uniquely handles timeouts, 400-fallback, finish_reason=length, empty answers plus escape-first markdown rendering and prompt-injection rule."
+    },
+    {
+      "participant": "artur",
+      "criteria": {
+        "functionality": 8.0,
+        "redflag_safety": 6.5,
+        "disclaimer_prompt_quality": 8.0,
+        "privacy_architecture": 10.0,
+        "ux_resilience": 9.5,
+        "code_security_complexity": 9.0
+      },
+      "summary_score": 8.41,
+      "notes": "Polished UX (connection pill, abort/timeout, goal validation, copy-plan) and clean textContent rendering with verbatim disclaimer, but the executed red-flag regex set (11/16) misses the mandated case «болит грудь» as well as «давление в груди», «болит живот» and stroke phrasings, so the LLM gets called on them."
+    },
+    {
+      "participant": "crashmax",
+      "criteria": {
+        "functionality": 7.5,
+        "redflag_safety": 8.0,
+        "redflag-normalized": null,
+        "disclaimer_prompt_quality": 8.5,
+        "privacy_architecture": 10.0,
+        "ux_resilience": 7.5,
+        "code_security_complexity": 8.5
+      },
+      "summary_score": 8.38,
+      "notes": "Solid normalized gate (12/16, catches «болит грудь») with verbatim disclaimer and structured 5-section prompt, but no fetch timeout risks an eternal spinner if the server stalls, the form is wholly disabled during generation, and the live response showed heavy model degeneration that its markdown renderer faithfully reproduced."
+    },
+    {
+      "participant": "kopytov",
+      "criteria": {
+        "functionality": 8.0,
+        "redflag_safety": 6.0,
+        "disclaimer_prompt_quality": 6.0,
+        "privacy_architecture": 10.0,
+        "ux_resilience": 9.0,
+        "code_security_complexity": 8.5
+      },
+      "summary_score": 7.81,
+      "notes": "Most ambitious entry (chat app with history, retry, localStorage schema validation, prompt-injection-hardened dual-mode prompts) but the executed gate (11/16) misses the mandated «болит грудь», «потерял сознание», «болит живот», and the mandatory verbatim disclaimer is absent — only «Не заменяет консультацию врача.» is shown."
+    },
+    {
+      "participant": "mira",
+      "criteria": {
+        "functionality": 5.5,
+        "redflag_safety": 3.0,
+        "disclaimer_prompt_quality": 4.0,
+        "privacy_architecture": 10.0,
+        "ux_resilience": 5.0,
+        "code_security_complexity": 5.0
+      },
+      "summary_score": 5.47,
+      "notes": "Only the verbatim footer disclaimer was added to the untouched template: one-line TODO-driven system prompt, a 2-pattern gate whose executed test (3/16) misses «болит грудь», dyspnea, bleeding, fainting, fever and stroke, plus no empty-response handling, timeouts or output formatting."
+    }
+  ],
+  "own_confidence": 0.86
+}
