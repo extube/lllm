@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Hackathon — Results &amp; Verification</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --bg2: #101830;
+    --card: rgba(255,255,255,.04);
+    --line: rgba(255,255,255,.10);
+    --text: #e7ecf7;
+    --muted: #93a0bd;
+    --cyan: #22d3ee;
+    --violet: #a78bfa;
+    --green: #34d399;
+    --red: #f87171;
+    --gold: #fbbf24;
+    --pink: #f472b6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(1100px 600px at 85% -10%, rgba(167,139,250,.14), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(34,211,238,.12), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    overflow: hidden;
+  }
+  .mono { font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace; }
+
+  /* ---------- chrome ---------- */
+  .topbar {
+    position: fixed; inset: 0 0 auto 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 28px; font-size: 13px; color: var(--muted);
+  }
+  .topbar .brand { display: flex; align-items: center; gap: 10px; color: var(--text); }
+  .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 12px var(--cyan); }
+  .progress { position: fixed; top: 0; left: 0; height: 3px; width: 0; z-index: 60;
+    background: linear-gradient(90deg, var(--cyan), var(--violet), var(--pink));
+    transition: width .45s ease; }
+  .counter { font-variant-numeric: tabular-nums; }
+  .counter b { color: var(--text); }
+
+  .deck { position: fixed; inset: 0; }
+
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    padding: 76px 72px 104px;
+    opacity: 0; transform: translateX(46px) scale(.985);
+    transition: opacity .5s ease, transform .5s ease;
+    pointer-events: none; overflow-y: auto; overflow-x: hidden;
+  }
+  .slide.prev { transform: translateX(-46px) scale(.985); }
+  .slide.active { opacity: 1; transform: none; pointer-events: auto; }
+
+  .slide > .inner { margin: auto 0; width: 100%; max-width: 1180px; align-self: center; }
+
+  .kicker {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--cyan); margin-bottom: 14px;
+  }
+  .kicker::before { content: ""; width: 26px; height: 2px; background: var(--cyan); border-radius: 2px; }
+  h1 { font-size: clamp(38px, 6vw, 76px); line-height: 1.05; letter-spacing: -.02em; }
+  h2 { font-size: clamp(26px, 3.4vw, 40px); letter-spacing: -.01em; margin-bottom: 8px; }
+  .sub { color: var(--muted); font-size: clamp(15px, 1.6vw, 18px); max-width: 860px; }
+  .accent-c { color: var(--cyan); } .accent-v { color: var(--violet); }
+  .accent-g { color: var(--green); } .accent-r { color: var(--red); }
+  .accent-o { color: var(--gold); }
+
+  /* staggered reveal inside active slide */
+  .slide .rise { opacity: 0; transform: translateY(18px); transition: opacity .5s ease, transform .5s ease; }
+  .slide.active .rise { opacity: 1; transform: none; }
+  .slide.active .rise:nth-child(1), .slide.active .d1 { transition-delay: .08s; }
+  .slide.active .rise:nth-child(2), .slide.active .d2 { transition-delay: .18s; }
+  .slide.active .rise:nth-child(3), .slide.active .d3 { transition-delay: .28s; }
+  .slide.active .rise:nth-child(4), .slide.active .d4 { transition-delay: .38s; }
+  .slide.active .rise:nth-child(5), .slide.active .d5 { transition-delay: .48s; }
+  .slide.active .rise:nth-child(6), .slide.active .d6 { transition-delay: .58s; }
+
+  /* ---------- shared components ---------- */
+  .grid { display: grid; gap: 18px; }
+  .g2 { grid-template-columns: repeat(2, 1fr); }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 16px; padding: 20px 22px; backdrop-filter: blur(6px);
+  }
+  .card h3 { font-size: 18px; margin-bottom: 6px; }
+  .card p, .card li { color: var(--muted); font-size: 14.5px; line-height: 1.55; }
+  .tag {
+    display: inline-block; font-size: 11.5px; padding: 3px 10px; border-radius: 999px;
+    border: 1px solid var(--line); color: var(--muted); margin: 2px 4px 2px 0;
+  }
+  .tag.c { color: var(--cyan); border-color: rgba(34,211,238,.4); }
+  .tag.v { color: var(--violet); border-color: rgba(167,139,250,.4); }
+  .tag.g { color: var(--green); border-color: rgba(52,211,153,.4); }
+  .tag.o { color: var(--gold); border-color: rgba(251,191,36,.4); }
+  .tag.r { color: var(--red); border-color: rgba(248,113,113,.4); }
+  .num { font-variant-numeric: tabular-nums; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.win td { background: rgba(251,191,36,.07); }
+  tr.fail td:last-child { color: var(--red); }
+  tr.ok td:last-child { color: var(--green); }
+
+  .flow { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; }
+  .flow .node {
+    flex: 1 1 150px; min-width: 140px; text-align: center;
+    border: 1px solid var(--line); border-radius: 14px; padding: 16px 12px;
+    background: var(--card);
+  }
+  .flow .node b { display: block; font-size: 15px; margin-bottom: 4px; }
+  .flow .node span { font-size: 12.5px; color: var(--muted); }
+  .flow .arrow { align-self: center; color: var(--muted); font-size: 20px; }
+
+  .steps { counter-reset: step; }
+  .step { display: flex; gap: 16px; padding: 13px 0; border-bottom: 1px dashed var(--line); }
+  .step:last-child { border-bottom: 0; }
+  .step::before {
+    counter-increment: step; content: counter(step);
+    flex: 0 0 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(34,211,238,.12); color: var(--cyan);
+    font-weight: 700; border: 1px solid rgba(34,211,238,.35);
+  }
+  .step p { font-size: 14.5px; line-height: 1.55; color: var(--muted); }
+  .step b { color: var(--text); }
+
+  .bar-row { display: grid; grid-template-columns: 170px 1fr 70px; gap: 12px; align-items: center; padding: 9px 0; }
+  .bar-track { height: 14px; border-radius: 999px; background: rgba(255,255,255,.06); overflow: hidden; }
+  .bar-fill { height: 100%; width: 0; border-radius: 999px; transition: width 1s cubic-bezier(.2,.8,.2,1) .35s; }
+  .slide.active .bar-fill { width: var(--w); }
+
+  /* ---------- title slide ---------- */
+  .title-meta { display: flex; gap: 26px; flex-wrap: wrap; margin-top: 34px; }
+  .title-meta .card { padding: 14px 20px; }
+  .title-meta .k { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+  .title-meta .v { font-size: 16px; margin-top: 3px; }
+
+  /* ---------- judges ---------- */
+  .judge { border-top: 3px solid var(--jc); }
+  .judge .role { color: var(--jc); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; margin-bottom: 6px; }
+  .conf { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+  .conf b { color: var(--text); }
+  .confmeter { height: 6px; border-radius: 999px; background: rgba(255,255,255,.07); margin-top: 6px; overflow: hidden; }
+  .confmeter i { display: block; height: 100%; background: var(--jc); border-radius: 999px; width: 0; transition: width .9s ease .5s; }
+  .slide.active .confmeter i { width: var(--cw); }
+
+  /* ---------- verdict ---------- */
+  .verdict-hero {
+    display: flex; gap: 22px; align-items: center; flex-wrap: wrap;
+    border: 1px solid rgba(251,191,36,.4); border-radius: 18px; padding: 24px 28px;
+    background: linear-gradient(120deg, rgba(251,191,36,.10), rgba(244,114,182,.07));
+  }
+  .cup { font-size: 54px; filter: drop-shadow(0 4px 18px rgba(251,191,36,.45)); }
+  .verdict-hero .name { font-size: clamp(24px, 3vw, 36px); font-weight: 800; color: var(--gold); }
+  .votes { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 14px; }
+  .vote { border: 1px solid var(--line); border-radius: 12px; padding: 10px 16px; background: var(--card); font-size: 14px; }
+  .vote .ok { color: var(--green); font-weight: 700; }
+
+  /* ---------- final slide ---------- */
+  .slide.final {
+    align-items: center; justify-content: center; text-align: center;
+    background:
+      radial-gradient(900px 500px at 50% 20%, rgba(251,191,36,.16), transparent 65%),
+      radial-gradient(700px 400px at 50% 100%, rgba(244,114,182,.10), transparent 60%);
+  }
+  .final .inner { display: flex; flex-direction: column; align-items: center; }
+
+  .confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; }
+  .confetti i {
+    position: absolute; top: -6vh; left: var(--x);
+    width: var(--s); height: calc(var(--s) * 1.7);
+    background: var(--c);
+    border-radius: var(--br, 2px);
+    opacity: .9;
+    animation: fall var(--dur) linear var(--delay) infinite;
+  }
+  @keyframes fall {
+    to { transform: translate3d(var(--sway, 0px), 118vh, 0) rotate(var(--rot)); }
+  }
+
+  .trophy {
+    font-size: clamp(70px, 10vw, 120px); line-height: 1; z-index: 2;
+    animation: trophyIn .9s cubic-bezier(.2,.9,.3,1.5) both, trophyFloat 3s ease-in-out 1.1s infinite alternate;
+    filter: drop-shadow(0 6px 30px rgba(251,191,36,.5));
+  }
+  @keyframes trophyIn {
+    from { opacity: 0; transform: scale(0) rotate(-30deg); }
+    to   { opacity: 1; transform: scale(1) rotate(0); }
+  }
+  @keyframes trophyFloat {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-14px); }
+  }
+
+  .congrats { display: flex; gap: 2px; z-index: 2; flex-wrap: wrap; justify-content: center; }
+  .congrats span {
+    display: inline-block; font-size: clamp(26px, 4.6vw, 54px); font-weight: 900;
+    letter-spacing: .06em;
+    background: linear-gradient(92deg, var(--gold), #fff3c4, var(--gold));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    opacity: 0;
+    animation: letterIn .6s cubic-bezier(.2,.8,.3,1.5) both;
+  }
+  @keyframes letterIn {
+    from { opacity: 0; transform: translateY(34px) rotate(8deg) scale(.4); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .winner-name {
+    z-index: 2; margin-top: 12px;
+    font-size: clamp(24px, 4vw, 44px); font-weight: 800;
+    color: #fff; animation: winnerIn .8s ease .9s both;
+  }
+  .winner-name .hl { color: var(--gold); text-shadow: 0 0 24px rgba(251,191,36,.55); animation: glow 2.2s ease-in-out 1.6s infinite alternate; }
+  @keyframes winnerIn { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
+  @keyframes glow {
+    from { text-shadow: 0 0 10px rgba(251,191,36,.35); }
+    to   { text-shadow: 0 0 32px rgba(251,191,36,.9); }
+  }
+
+  .score-badge {
+    z-index: 2; margin-top: 16px; display: flex; align-items: baseline; gap: 12px;
+    border: 1px solid rgba(251,191,36,.45); border-radius: 999px;
+    padding: 10px 26px; background: rgba(251,191,36,.08);
+    animation: winnerIn .8s ease 1.2s both;
+  }
+  .score-badge .score { font-size: 40px; font-weight: 900; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .score-badge .lbl { color: var(--muted); font-size: 13px; }
+
+  .medals { z-index: 2; display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+  .medal { border: 1px solid var(--line); border-radius: 12px; padding: 9px 16px; background: var(--card); font-size: 14px; opacity: 0; animation: winnerIn .6s ease both; }
+  .medal:nth-child(1) { animation-delay: 1.5s; }
+  .medal:nth-child(2) { animation-delay: 1.7s; }
+  .medal:nth-child(3) { animation-delay: 1.9s; }
+  .medal b { color: var(--gold); }
+
+  .votes-final { z-index: 2; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+  .votes-final .vote { opacity: 0; animation: pop .5s cubic-bezier(.2,.9,.3,1.6) both; }
+  .votes-final .vote:nth-child(1) { animation-delay: 2.1s; }
+  .votes-final .vote:nth-child(2) { animation-delay: 2.3s; }
+  .votes-final .vote:nth-child(3) { animation-delay: 2.5s; }
+  @keyframes pop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: scale(1); } }
+
+  /* ---------- nav ---------- */
+  .nav {
+    position: fixed; bottom: 22px; right: 28px; z-index: 50;
+    display: flex; gap: 10px;
+  }
+  .nav button {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 1px solid var(--line); background: var(--card); color: var(--text);
+    font-size: 18px; cursor: pointer; transition: .2s;
+  }
+  .nav button:hover { border-color: var(--cyan); color: var(--cyan); transform: translateY(-2px); }
+  .nav button:disabled { opacity: .3; cursor: default; transform: none; }
+  .dots { position: fixed; bottom: 34px; left: 50%; transform: translateX(-50%); z-index: 50; display: flex; gap: 8px; }
+  .dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.18); cursor: pointer; transition: .25s; }
+  .dots i.on { background: var(--cyan); transform: scale(1.35); box-shadow: 0 0 8px rgba(34,211,238,.7); }
+  .hint { position: fixed; bottom: 30px; left: 28px; z-index: 50; font-size: 12px; color: var(--muted); }
+
+  @media (max-width: 900px) {
+    .slide { padding: 64px 22px 100px; }
+    .g3 { grid-template-columns: 1fr; }
+    .g2 { grid-template-columns: 1fr; }
+    .bar-row { grid-template-columns: 110px 1fr 60px; }
+    .hint { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<header class="topbar">
+  <div class="brand"><span class="dot"></span> LLM Hackathon · Results &amp; Verification</div>
+  <div class="counter mono"><b id="cur">01</b> / <span id="total">12</span></div>
+</header>
+
+<main class="deck" id="deck">
+
+  <!-- 1 · TITLE -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">Hackathon of using local LLM · 30-minute builds</div>
+      <h1 class="rise d2">Results &amp;<br><span class="accent-c">Verification Report</span></h1>
+      <p class="sub rise d3">How three independent cloud LLM judges tested six single-file preventive-medicine
+      sites against a <b class="accent-c">local model</b> — and how the chair model issued the final, unanimous verdict.</p>
+      <div class="title-meta rise d4">
+        <div class="card"><div class="k">Date</div><div class="v mono">2026-10-22</div></div>
+        <div class="card"><div class="k">Scoring branch</div><div class="v mono">jitterbot/scoring</div></div>
+        <div class="card"><div class="k">Tested LLM</div><div class="v mono">localhost:8000/v1 · Gemma-4-E2B</div></div>
+        <div class="card"><div class="k">Method</div><div class="v">3 judges → 1 chair → 3/3 vote</div></div>
+      </div>
+      <p class="rise d5" style="margin-top:22px; color:var(--muted); font-size:13.5px;">
+        Live tests: each judge served every entry locally and verified behavior with <span class="mono accent-c">curl</span> +
+        code — method recorded as <span class="mono">curl+code</span> by all judges.
+      </p>
+    </div>
+  </section>
+
+  <!-- 2 · PIPELINE -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">Method</div>
+      <h2 class="rise d2">The verification pipeline</h2>
+      <p class="sub rise d3">Fully automated via <span class="mono accent-c">judge/run.sh</span> + <span class="mono accent-c">judge/pipeline.py</span> — no human scoring in the loop.</p>
+      <div class="flow rise d4" style="margin-top:26px;">
+        <div class="node"><b>🎯 Evaluator prompt</b><span>one identical prompt sent to every judge via <span class="mono">opencode run</span></span></div>
+        <div class="arrow">→</div>
+        <div class="node"><b>⚖️ 3 judges</b><span>GLM-5.3-Flash · MiMo-V2.6-Flash · Qwen3.7-Plus<br>independent static + live analysis</span></div>
+        <div class="arrow">→</div>
+        <div class="node"><b>🧾 3 JSON reports</b><span>same schema: 6 participants × 6 criteria + summary</span></div>
+        <div class="arrow">→</div>
+        <div class="node"><b>🪑 Chair</b><span>minimax-m3<br>weighted means · hard-req flags · verdict</span></div>
+        <div class="arrow">→</div>
+        <div class="node"><b>🗳️ Vote round</b><span>judges see verdict, answer <span class="mono">{"agree"}</span></span></div>
+        <div class="arrow">→</div>
+        <div class="node" style="border-color:rgba(52,211,153,.45)"><b class="accent-g">✅ Final</b><span>3/3 agree → no rescoring</span></div>
+      </div>
+      <div class="grid g3 rise d5" style="margin-top:24px;">
+        <div class="card"><h3>Independence</h3><p>Each judge works alone, never sees the others' scores until the vote.</p></div>
+        <div class="card"><h3>Live testing</h3><p>Every entry executed against the running local model, not just read.</p></div>
+        <div class="card"><h3>Consensus</h3><p>A verdict only becomes final after all judges confirm it.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · PROCESS STEPS -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">Verification process</div>
+      <h2 class="rise d2">Five steps, every judge, every entry</h2>
+      <div class="steps rise d3" style="margin-top:18px;">
+        <div class="step"><p><b>Identical evaluator prompt</b> delivered to each of the 3 judges via <span class="mono accent-c">opencode run</span> — same instructions, no steering.</p></div>
+        <div class="step"><p><b>Static analysis:</b> read all six <span class="mono">index.html</span> files — single file, no frameworks/backend, requests only to <span class="mono">localhost:8000</span>, mandatory form, verbatim disclaimer, loading «думаю…» and error states.</p></div>
+        <div class="step"><p><b>Live test:</b> serve each entry (<span class="mono">python3 -m http.server 8080</span>), discover the model via <span class="mono">GET /v1/models</span>, replay the entry's own prompts with <span class="mono accent-c">curl http://localhost:8000/v1/chat/completions</span>.</p></div>
+        <div class="step"><p><b>Safety probes:</b> normal text → plan rendered · red-flag text «болит грудь» → request <b class="accent-r">must not be sent</b>, banner «немедленно обратитесь к врачу / 103» · LLM down → readable error.</p></div>
+        <div class="step"><p><b>Scoring &amp; chair:</b> identical JSON schema (6 participants × 6 criteria + summary) → chair model computes weighted means, flags hard-requirement failures, ranks, issues the verdict → vote round confirms it (<span class="mono">votes-r1.json</span>).</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · JUDGES -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">The models &amp; their meaning</div>
+      <h2 class="rise d2">Three independent judges</h2>
+      <p class="sub rise d3">Each judge ran the full pipeline alone: static read → live curl probes → scored report. Confidence is self-reported.</p>
+      <div class="grid g3 rise d4" style="margin-top:24px;">
+        <div class="card judge" style="--jc:var(--cyan)">
+          <div class="role">Judge 1</div>
+          <h3 class="mono">glm-5.3-flash</h3>
+          <p>Depth specialist: hardest on robustness — probed timeouts, 400-fallback, <span class="mono">finish_reason=length</span>, empty answers, escape-first markdown and prompt-injection defenses.</p>
+          <div class="conf">own_confidence <b>0.86</b></div>
+          <div class="confmeter" style="--cw:86%"><i></i></div>
+        </div>
+        <div class="card judge" style="--jc:var(--violet)">
+          <div class="role">Judge 2</div>
+          <h3 class="mono">mimo-v2.6-flash</h3>
+          <p>Behavioral specialist: ran a 9-case red-flag battery with a fetch-spy, verified <b>zero network calls</b> before the banner and measured live response times (15.5–19.4 s).</p>
+          <div class="conf">own_confidence <b>0.85</b></div>
+          <div class="confmeter" style="--cw:85%"><i></i></div>
+        </div>
+        <div class="card judge" style="--jc:var(--green)">
+          <div class="role">Judge 3</div>
+          <h3 class="mono">qwen3.7-plus</h3>
+          <p>Spec-compliance specialist: strict on TASK.md requirements — verbatim disclaimer wording, checkbox form semantics, Cyrillic-aware regex coverage and privacy hardening.</p>
+          <div class="conf">own_confidence <b>0.82</b></div>
+          <div class="confmeter" style="--cw:82%"><i></i></div>
+        </div>
+      </div>
+      <p class="rise d5" style="margin-top:20px; color:var(--muted); font-size:13.5px;">
+        Full transcripts: <span class="mono">judge/results/log-judge{1,2,3}.txt</span> · reports: <span class="mono">judge{1,2,3}.json</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- 5 · CHAIR -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">The models &amp; their meaning</div>
+      <h2 class="rise d2">The chair — <span class="mono accent-v">minimax-m3</span></h2>
+      <div class="grid g2 rise d3" style="margin-top:20px;">
+        <div class="card judge" style="--jc:var(--violet)">
+          <div class="role">Chair · final verdict</div>
+          <h3>Aggregator, not another opinion</h3>
+          <p>Received all three judge reports and:</p>
+          <ul style="margin:10px 0 0 18px;">
+            <li>computed the mean <span class="mono">summary_score</span> per participant across judges</li>
+            <li>broke ties in favor of higher <span class="mono">redflag_safety</span> and <span class="mono">privacy_architecture</span></li>
+            <li>flagged hard-requirement failures as disqualified from winning</li>
+            <li>ranked entries and issued the single verdict</li>
+          </ul>
+          <div class="conf">transcript <span class="mono">log-final-r1.txt</span> · <span class="mono">used_tiebreak: false</span></div>
+        </div>
+        <div class="card">
+          <h3>Three prompts, three moments</h3>
+          <p style="margin-top:8px;"><b class="accent-c">Evaluator</b> (×3 judges) — static checklist + mandatory live test + exact JSON output.</p>
+          <p style="margin-top:10px;"><b class="accent-v">Chair</b> — means, tie-break rule, hard-req flags; returns exactly <span class="mono">{"winner","ranking","reason","used_tiebreak"}</span>.</p>
+          <p style="margin-top:10px;"><b class="accent-g">Vote</b> — each judge sees the verdict and answers only <span class="mono">{"judge_id","agree"}</span>.</p>
+          <p style="margin-top:10px;">Full texts: <span class="mono">evaluator-prompt.md · final-prompt.md</span></p>
+        </div>
+      </div>
+      <div class="card rise d4" style="margin-top:18px;">
+        <h3>What the vote decided</h3>
+        <p>3/3 agree → the rescoring round was <b class="accent-g">not triggered</b> — the chair's verdict stood as final, with no second pass needed.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · RUBRIC -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">Scoring</div>
+      <h2 class="rise d2">Rubric &amp; hard requirements</h2>
+      <div class="grid g2 rise d3" style="margin-top:20px;">
+        <div class="card">
+          <h3>Six criteria, 0–10 each</h3>
+          <table style="margin-top:10px;">
+            <tr><td>functionality</td><td class="num"><span class="tag c">×1.5</span></td></tr>
+            <tr><td>redflag_safety</td><td class="num"><span class="tag c">×1.5</span></td></tr>
+            <tr><td>disclaimer_prompt_quality</td><td class="num"><span class="tag c">×1.5</span></td></tr>
+            <tr><td>privacy_architecture</td><td class="num"><span class="tag c">×1.5</span></td></tr>
+            <tr><td>ux_resilience</td><td class="num"><span class="tag">×1.0</span></td></tr>
+            <tr><td>code_security_complexity</td><td class="num"><span class="tag">×1.0</span></td></tr>
+          </table>
+          <p style="margin-top:10px;"><span class="mono accent-c">summary_score</span> = weighted mean; criteria 1–4 weighted ×1.5.</p>
+        </div>
+        <div class="card" style="border-top:3px solid var(--red)">
+          <h3>Hard requirements (TASK.md)</h3>
+          <p style="margin-top:10px;"><b class="accent-r">1 · Red-flag gate before the LLM:</b> chest pain, dyspnea, bleeding, fainting, suicidal thoughts, T&nbsp;&gt;&nbsp;39&nbsp;°C, acute abdominal pain, stroke signs → red banner «немедленно обратитесь к врачу / 103», <b>no LLM call</b>.</p>
+          <p style="margin-top:12px;"><b class="accent-r">2 · Verbatim disclaimer:</b> «Материал носит образовательный характер и не является медицинской рекомендацией.»</p>
+          <p style="margin-top:12px;"><b class="accent-r">3 · Privacy:</b> requests only to <span class="mono">localhost:8000</span> — any non-local host disqualifies.</p>
+          <p style="margin-top:12px;">A failure on any of these = <b class="accent-r">disqualified from winning</b>, regardless of score.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · SCORES -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">Results</div>
+      <h2 class="rise d2">Scores by judge → mean → verdict</h2>
+      <div class="card rise d3" style="margin-top:20px; overflow-x:auto;">
+        <table>
+          <tr><th>Participant</th><th class="num">GLM-5.3-Flash</th><th class="num">MiMo-V2.6-Flash</th><th class="num">Qwen3.7-Plus</th><th class="num">Mean</th><th>Chair verdict</th></tr>
+          <tr class="win"><td>🏆 self369heal-cmyk</td><td class="num">9.25</td><td class="num">9.50</td><td class="num">9.50</td><td class="num"><b class="accent-o">9.42</b></td><td class="ok">Winner</td></tr>
+          <tr><td>Olyshka</td><td class="num">9.19</td><td class="num">9.22</td><td class="num">8.69</td><td class="num"><b>9.03</b></td><td class="ok">Runner-up (eligible)</td></tr>
+          <tr><td>crashmax</td><td class="num">8.38</td><td class="num">9.28</td><td class="num">8.69</td><td class="num"><b>8.78</b></td><td class="ok">Runner-up (eligible)</td></tr>
+          <tr class="fail"><td>artur</td><td class="num">8.41</td><td class="num">8.31</td><td class="num">8.75</td><td class="num"><b>8.49</b></td><td>Hard-req fail: red-flag gate</td></tr>
+          <tr class="fail"><td>kopytov</td><td class="num">7.81</td><td class="num">7.75</td><td class="num">7.75</td><td class="num"><b>7.77</b></td><td>Hard-req fail: disclaimer + gate</td></tr>
+          <tr class="fail"><td>mira</td><td class="num">5.47</td><td class="num">5.66</td><td class="num">4.81</td><td class="num"><b>5.31</b></td><td>Hard-req fail: gate only 3/16</td></tr>
+        </table>
+      </div>
+      <p class="rise d4" style="margin-top:16px; color:var(--muted); font-size:13.5px;">
+        Remarkable spread: the judges scored within <b class="accent-c">±0.31</b> of each other on the winner — near-perfect consensus on who built the safest site.
+      </p>
+    </div>
+  </section>
+
+  <!-- 8 · INSIGHTS -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">What each judge found</div>
+      <h2 class="rise d2">Key insights from the reports</h2>
+      <div class="grid g3 rise d3" style="margin-top:22px;">
+        <div class="card judge" style="--jc:var(--cyan)">
+          <div class="role">Judge 1 · GLM</div>
+          <p><b class="accent-c">self369heal-cmyk</b> — best overall: CSP lock, gate 13/16 with labeled reasons, survives timeouts / 400 / length / empty answers, escape-first markdown + anti-injection rule.</p>
+          <p style="margin-top:10px;"><b class="accent-r">artur</b>'s gate misses «болит грудь», «болит живот» — the LLM gets called on red flags. <b>kopytov</b>: disclaimer absent.</p>
+        </div>
+        <div class="card judge" style="--jc:var(--violet)">
+          <div class="role">Judge 2 · MiMo</div>
+          <p>Live battery 9/9 with a fetch-spy: <b class="accent-r">artur's page really sent a chat/completions request</b> on «болит грудь» and rendered a plan instead of the doctor banner.</p>
+          <p style="margin-top:10px;"><b>crashmax</b>: 9/9 with zero fetches, live 5-section plan in 19.4 s. <b>kopytov</b>: 0 occurrences of the verbatim disclaimer.</p>
+        </div>
+        <div class="card judge" style="--jc:var(--green)">
+          <div class="role">Judge 3 · Qwen</div>
+          <p><b class="accent-g">self369heal-cmyk</b> — most privacy-hardened and safety-complete entry; <b>Olyshka</b> forces the disclaimer through its 4-section system prompt with 9 Cyrillic-aware regexes.</p>
+          <p style="margin-top:10px;"><b class="accent-r">mira</b>: template with TODOs left in, gate covers 2 categories only.</p>
+        </div>
+      </div>
+      <div class="card rise d4" style="margin-top:18px;">
+        <p><b class="accent-o">Common thread:</b> scores diverged on UX polish, but all three judges converged on the same safety facts — who gated red flags pre-LLM, who kept the verbatim disclaimer, who stayed localhost-only. That convergence is what let the chair rule without a tie-break.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · VERDICT -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">Final verdict · chair minimax-m3</div>
+      <div class="verdict-hero rise d2">
+        <div class="cup">🏆</div>
+        <div>
+          <div style="font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted);">Winner</div>
+          <div class="name mono">self369heal-cmyk</div>
+          <div style="color:var(--muted); margin-top:4px;">mean summary_score <b class="accent-o num">9.42</b> · unanimous #1 · <span class="mono">used_tiebreak: false</span></div>
+        </div>
+      </div>
+      <div class="grid g2 rise d3" style="margin-top:18px;">
+        <div class="card">
+          <h3 class="accent-g">Why it won</h3>
+          <ul style="margin:10px 0 0 18px; color:var(--muted); font-size:14.5px; line-height:1.6;">
+            <li>leads the mean: 9.42 vs Olyshka 9.03, crashmax 8.78</li>
+            <li>CSP locks networking to <span class="mono">localhost:8000</span> — privacy 10/10 across judges</li>
+            <li>red-flag gate catches «болит грудь» <b>before any fetch</b></li>
+            <li>verbatim disclaimer present</li>
+          </ul>
+        </div>
+        <div class="card" style="border-top:3px solid var(--red)">
+          <h3 class="accent-r">Flagged: hard-requirement failures</h3>
+          <ul style="margin:10px 0 0 18px; color:var(--muted); font-size:14.5px; line-height:1.6;">
+            <li><b>artur</b> — gate misses «болит грудь», LLM called on red flags</li>
+            <li><b>kopytov</b> — mandatory verbatim disclaimer omitted + gate miss</li>
+            <li><b>mira</b> — gate catches only 3/16 red-flag cases</li>
+            <li><b>Olyshka</b> &amp; <b>crashmax</b> — eligible runners-up, lower mean</li>
+          </ul>
+        </div>
+      </div>
+      <div class="votes rise d4">
+        <div class="vote"><span class="mono">glm-5.3-flash</span> · <span class="ok">✅ agree</span></div>
+        <div class="vote"><span class="mono">mimo-v2.6-flash</span> · <span class="ok">✅ agree</span></div>
+        <div class="vote"><span class="mono">qwen3.7-plus</span> · <span class="ok">✅ agree</span></div>
+        <div class="vote" style="border-color:rgba(52,211,153,.5)"><b class="accent-g">3/3 — verdict final</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · TIER LIST -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">Tier list</div>
+      <h2 class="rise d2">Where everyone landed</h2>
+      <div class="card rise d3" style="margin-top:22px;">
+        <div class="bar-row"><span class="mono">🥇 self369heal-cmyk</span><div class="bar-track"><div class="bar-fill" style="--w:94.2%; background:linear-gradient(90deg,var(--gold),#fff3c4)"></div></div><b class="num accent-o">S · 9.42</b></div>
+        <div class="bar-row"><span class="mono">🥈 Olyshka</span><div class="bar-track"><div class="bar-fill" style="--w:90.3%; background:linear-gradient(90deg,#94a3b8,#e2e8f0)"></div></div><b class="num">S · 9.03</b></div>
+        <div class="bar-row"><span class="mono">🥉 crashmax</span><div class="bar-track"><div class="bar-fill" style="--w:87.8%; background:linear-gradient(90deg,#b45309,#f59e0b)"></div></div><b class="num">A · 8.78</b></div>
+        <div class="bar-row"><span class="mono">artur</span><div class="bar-track"><div class="bar-fill" style="--w:84.9%; background:linear-gradient(90deg,#b45309,#f59e0b)"></div></div><b class="num">A · 8.49</b></div>
+        <div class="bar-row"><span class="mono">kopytov</span><div class="bar-track"><div class="bar-fill" style="--w:77.7%; background:linear-gradient(90deg,#b45309,#f59e0b)"></div></div><b class="num">A · 7.77</b></div>
+        <div class="bar-row"><span class="mono">mira</span><div class="bar-track"><div class="bar-fill" style="--w:53.1%; background:linear-gradient(90deg,#7c3aed,#a78bfa)"></div></div><b class="num">B · 5.31</b></div>
+      </div>
+      <p class="rise d4" style="margin-top:16px; color:var(--muted); font-size:13.5px;">
+        S = winner tier · A = strong build, hard-req failures for artur &amp; kopytov · B = template-level entry.
+        Tiers from <span class="mono">judge/results/tierlist.md</span>.
+      </p>
+    </div>
+  </section>
+
+  <!-- 11 · ARTIFACTS -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">Reproducibility</div>
+      <h2 class="rise d2">Every step left an artifact</h2>
+      <div class="grid g2 rise d3" style="margin-top:22px;">
+        <div class="card">
+          <table>
+            <tr><th>File · <span class="mono">judge/results/</span></th><th>Content</th></tr>
+            <tr><td class="mono">winner.json</td><td>final verdict (winner, ranking, reason)</td></tr>
+            <tr><td class="mono">tierlist.md</td><td>tier table</td></tr>
+            <tr><td class="mono">analytics-&lt;p&gt;.md</td><td>per-project: all 3 judges' criteria + notes</td></tr>
+            <tr><td class="mono">judge{1,2,3}.json</td><td>extracted judge reports</td></tr>
+            <tr><td class="mono">log-judge{1,2,3}.txt</td><td>full judge transcripts incl. live-test commands</td></tr>
+            <tr><td class="mono">log-final-r1.txt</td><td>chair model transcript</td></tr>
+            <tr><td class="mono">votes-r1.json</td><td>per-judge agree votes</td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <h3>Re-run the whole verification</h3>
+          <p style="margin-top:10px;">The pipeline is a single command:</p>
+          <p class="mono accent-c" style="margin-top:10px; background:rgba(34,211,238,.07); border:1px solid rgba(34,211,238,.25); border-radius:10px; padding:12px 14px;">judge/run.sh</p>
+          <p style="margin-top:14px;">Requires the local model up at <span class="mono">localhost:8000/v1</span> (Gemma-4-E2B agent) and <span class="mono">opencode run</span> for the judge agents.</p>
+          <div style="margin-top:14px;">
+            <span class="tag c">same prompt × 3</span><span class="tag v">live curl probes</span><span class="tag g">JSON schema locked</span><span class="tag o">vote-gated verdict</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 · FINAL: CONGRATULATIONS -->
+  <section class="slide final" data-final>
+    <div class="confetti" id="confetti"></div>
+    <div class="inner">
+      <div class="trophy">🏆</div>
+      <div class="congrats" id="congrats" aria-label="Congratulations!"></div>
+      <div class="winner-name">The local-LLM champion: <span class="hl mono">self369heal-cmyk</span></div>
+      <div class="score-badge">
+        <span class="score num" id="scoreNum">0.00</span>
+        <span class="lbl">mean summary_score<br>unanimous #1 across all 3 judges</span>
+      </div>
+      <div class="medals">
+        <div class="medal">🥇 <b>self369heal-cmyk</b> · 9.42</div>
+        <div class="medal">🥈 Olyshka · 9.03</div>
+        <div class="medal">🥉 crashmax · 8.78</div>
+      </div>
+      <div class="votes-final">
+        <div class="vote"><span class="mono">glm-5.3-flash</span> <span class="ok">✅</span></div>
+        <div class="vote"><span class="mono">mimo-v2.6-flash</span> <span class="ok">✅</span></div>
+        <div class="vote"><span class="mono">qwen3.7-plus</span> <span class="ok">✅</span></div>
+      </div>
+      <p class="rise d5" style="margin-top:22px; color:var(--muted); font-size:14px; z-index:2;">
+        Verified by 3 independent judges · confirmed by chair <span class="mono">minimax-m3</span> · ratified 3/3 🎉
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<div class="dots" id="dots"></div>
+<nav class="nav">
+  <button id="prev" title="Previous (←)">‹</button>
+  <button id="next" title="Next (→)">›</button>
+</nav>
+<div class="hint mono">← → navigate · Home/End · click dots · swipe</div>
+
+<script>
+(function () {
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const progress = document.getElementById('progress');
+  const curEl = document.getElementById('cur');
+  const totalEl = document.getElementById('total');
+  const dotsEl = document.getElementById('dots');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  const confettiEl = document.getElementById('confetti');
+  const congratsEl = document.getElementById('congrats');
+  const scoreEl = document.getElementById('scoreNum');
+
+  let cur = 0;
+  totalEl.textContent = String(slides.length).padStart(2, '0');
+
+  slides.forEach((_, i) => {
+    const d = document.createElement('i');
+    d.addEventListener('click', () => go(i));
+    dotsEl.appendChild(d);
+  });
+
+  function pad(n) { return String(n + 1).padStart(2, '0'); }
+
+  function render() {
+    slides.forEach((s, i) => {
+      s.classList.toggle('active', i === cur);
+      s.classList.toggle('prev', i < cur);
+    });
+    progress.style.width = ((cur + 1) / slides.length * 100) + '%';
+    curEl.textContent = pad(cur);
+    dotsEl.querySelectorAll('i').forEach((d, i) => d.classList.toggle('on', i === cur));
+    prevBtn.disabled = cur === 0;
+    nextBtn.disabled = cur === slides.length - 1;
+    if (slides[cur].dataset.final !== undefined) startFinalFx();
+    else stopFinalFx();
+  }
+
+  function go(n) {
+    const c = Math.max(0, Math.min(slides.length - 1, n));
+    if (c === cur && slides[cur].classList.contains('active')) return;
+    cur = c;
+    render();
+  }
+
+  prevBtn.addEventListener('click', () => go(cur - 1));
+  nextBtn.addEventListener('click', () => go(cur + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); go(cur + 1); }
+    else if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); go(cur - 1); }
+    else if (e.key === 'Home') go(0);
+    else if (e.key === 'End') go(slides.length - 1);
+  });
+
+  let tx = null;
+  document.addEventListener('touchstart', (e) => { tx = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (tx === null) return;
+    const dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx) > 50) go(cur + (dx < 0 ? 1 : -1));
+    tx = null;
+  }, { passive: true });
+
+  /* ---------- final slide FX ---------- */
+  const COLORS = ['#fbbf24', '#f472b6', '#34d399', '#22d3ee', '#a78bfa', '#f87171', '#ffffff'];
+
+  function buildCongrats() {
+    const text = 'CONGRATULATIONS!';
+    congratsEl.innerHTML = '';
+    Array.from(text).forEach((ch, i) => {
+      const s = document.createElement('span');
+      s.textContent = ch;
+      s.style.animationDelay = (0.15 + i * 0.055) + 's';
+      congratsEl.appendChild(s);
+    });
+  }
+
+  function buildConfetti() {
+    confettiEl.innerHTML = '';
+    for (let i = 0; i < 130; i++) {
+      const p = document.createElement('i');
+      p.style.setProperty('--x', (Math.random() * 100) + '%');
+      p.style.setProperty('--dur', (2.6 + Math.random() * 3.2).toFixed(2) + 's');
+      p.style.setProperty('--delay', (Math.random() * 3).toFixed(2) + 's');
+      p.style.setProperty('--rot', (Math.random() < 0.5 ? '-' : '') + Math.round(360 + Math.random() * 720) + 'deg');
+      p.style.setProperty('--sway', Math.round(-70 + Math.random() * 140) + 'px');
+      p.style.setProperty('--c', COLORS[i % COLORS.length]);
+      const size = 6 + Math.random() * 8;
+      p.style.setProperty('--s', size.toFixed(1) + 'px');
+      if (Math.random() < 0.4) p.style.setProperty('--br', '50%');
+      confettiEl.appendChild(p);
+    }
+  }
+
+  let scoreRaf = null;
+  function countUp(target, dur) {
+    if (scoreRaf) cancelAnimationFrame(scoreRaf);
+    const t0 = performance.now();
+    function frame(t) {
+      const p = Math.min(1, (t - t0) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      scoreEl.textContent = (target * eased).toFixed(2);
+      if (p < 1) scoreRaf = requestAnimationFrame(frame);
+    }
+    scoreRaf = requestAnimationFrame(frame);
+  }
+
+  function startFinalFx() {
+    buildCongrats();
+    buildConfetti();
+    countUp(9.42, 1500);
+  }
+
+  function stopFinalFx() {
+    confettiEl.innerHTML = '';
+    if (scoreRaf) { cancelAnimationFrame(scoreRaf); scoreRaf = null; }
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
