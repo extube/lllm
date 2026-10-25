@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LLM Hackathon — Results &amp; Verification</title>
+<title>LLM-хакатон — Итоги и верификация</title>
 <style>
   :root {
     --bg: #0b1020;
@@ -69,7 +69,7 @@
   .kicker::before { content: ""; width: 26px; height: 2px; background: var(--cyan); border-radius: 2px; }
   h1 { font-size: clamp(38px, 6vw, 76px); line-height: 1.05; letter-spacing: -.02em; }
   h2 { font-size: clamp(26px, 3.4vw, 40px); letter-spacing: -.01em; margin-bottom: 8px; }
-  .sub { color: var(--muted); font-size: clamp(15px, 1.6vw, 18px); max-width: 860px; }
+  .sub { color: var(--muted); font-size: clamp(15px, 1.6vw, 18px); max-width: 900px; }
   .accent-c { color: var(--cyan); } .accent-v { color: var(--violet); }
   .accent-g { color: var(--green); } .accent-r { color: var(--red); }
   .accent-o { color: var(--gold); }
@@ -284,267 +284,268 @@
 <div class="progress" id="progress"></div>
 
 <header class="topbar">
-  <div class="brand"><span class="dot"></span> LLM Hackathon · Results &amp; Verification</div>
+  <div class="brand"><span class="dot"></span> LLM-хакатон · Итоги и верификация</div>
   <div class="counter mono"><b id="cur">01</b> / <span id="total">12</span></div>
 </header>
 
 <main class="deck" id="deck">
 
-  <!-- 1 · TITLE -->
+  <!-- 1 · ТИТУЛ -->
   <section class="slide">
     <div class="inner">
-      <div class="kicker rise d1">Hackathon of using local LLM · 30-minute builds</div>
-      <h1 class="rise d2">Results &amp;<br><span class="accent-c">Verification Report</span></h1>
-      <p class="sub rise d3">How three independent cloud LLM judges tested six single-file preventive-medicine
-      sites against a <b class="accent-c">local model</b> — and how the chair model issued the final, unanimous verdict.</p>
+      <div class="kicker rise d1">Хакатон локальных LLM · сборки за 30 минут</div>
+      <h1 class="rise d2">Результаты и<br><span class="accent-c">отчёт о верификации</span></h1>
+      <p class="sub rise d3">Как три независимых облачных LLM-судьи тестировали шесть однофайловых сайтов
+      превентивной медицины против <b class="accent-c">локальной модели</b> — и как модель-председатель
+      вынесла единогласный финальный вердикт.</p>
       <div class="title-meta rise d4">
-        <div class="card"><div class="k">Date</div><div class="v mono">2026-10-22</div></div>
-        <div class="card"><div class="k">Scoring branch</div><div class="v mono">jitterbot/scoring</div></div>
-        <div class="card"><div class="k">Tested LLM</div><div class="v mono">localhost:8000/v1 · Gemma-4-E2B</div></div>
-        <div class="card"><div class="k">Method</div><div class="v">3 judges → 1 chair → 3/3 vote</div></div>
+        <div class="card"><div class="k">Дата</div><div class="v mono">2026-10-22</div></div>
+        <div class="card"><div class="k">Ветка скоринга</div><div class="v mono">jitterbot/scoring</div></div>
+        <div class="card"><div class="k">Тестируемая LLM</div><div class="v mono">localhost:8000/v1 · Gemma-4-E2B</div></div>
+        <div class="card"><div class="k">Метод</div><div class="v">3 судьи → 1 председатель → голос 3/3</div></div>
       </div>
       <p class="rise d5" style="margin-top:22px; color:var(--muted); font-size:13.5px;">
-        Live tests: each judge served every entry locally and verified behavior with <span class="mono accent-c">curl</span> +
-        code — method recorded as <span class="mono">curl+code</span> by all judges.
+        Живые тесты: каждый судья запускал каждую работу локально и проверял поведение через
+        <span class="mono accent-c">curl</span> + код — метод зафиксирован всеми судьями как <span class="mono">curl+code</span>.
       </p>
     </div>
   </section>
 
-  <!-- 2 · PIPELINE -->
+  <!-- 2 · КОНВЕЙЕР -->
   <section class="slide">
     <div class="inner">
-      <div class="kicker rise d1">Method</div>
-      <h2 class="rise d2">The verification pipeline</h2>
-      <p class="sub rise d3">Fully automated via <span class="mono accent-c">judge/run.sh</span> + <span class="mono accent-c">judge/pipeline.py</span> — no human scoring in the loop.</p>
+      <div class="kicker rise d1">Метод</div>
+      <h2 class="rise d2">Конвейер верификации</h2>
+      <p class="sub rise d3">Полностью автоматизирован через <span class="mono accent-c">judge/run.sh</span> + <span class="mono accent-c">judge/pipeline.py</span> — ни одного человека в цикле оценивания.</p>
       <div class="flow rise d4" style="margin-top:26px;">
-        <div class="node"><b>🎯 Evaluator prompt</b><span>one identical prompt sent to every judge via <span class="mono">opencode run</span></span></div>
+        <div class="node"><b>🎯 Промпт оценщика</b><span>один и тот же промпт каждому судье через <span class="mono">opencode run</span></span></div>
         <div class="arrow">→</div>
-        <div class="node"><b>⚖️ 3 judges</b><span>GLM-5.3-Flash · MiMo-V2.6-Flash · Qwen3.7-Plus<br>independent static + live analysis</span></div>
+        <div class="node"><b>⚖️ 3 судьи</b><span>GLM-5.3-Flash · MiMo-V2.6-Flash · Qwen3.7-Plus<br>независимый статический + живой анализ</span></div>
         <div class="arrow">→</div>
-        <div class="node"><b>🧾 3 JSON reports</b><span>same schema: 6 participants × 6 criteria + summary</span></div>
+        <div class="node"><b>🧾 3 JSON-отчёта</b><span>единая схема: 6 участников × 6 критериев + summary</span></div>
         <div class="arrow">→</div>
-        <div class="node"><b>🪑 Chair</b><span>minimax-m3<br>weighted means · hard-req flags · verdict</span></div>
+        <div class="node"><b>🪑 Председатель</b><span>minimax-m3<br>взвешенные средние · флаги hard-требований · вердикт</span></div>
         <div class="arrow">→</div>
-        <div class="node"><b>🗳️ Vote round</b><span>judges see verdict, answer <span class="mono">{"agree"}</span></span></div>
+        <div class="node"><b>🗳️ Раунд голосования</b><span>судьи видят вердикт, отвечают <span class="mono">{"agree"}</span></span></div>
         <div class="arrow">→</div>
-        <div class="node" style="border-color:rgba(52,211,153,.45)"><b class="accent-g">✅ Final</b><span>3/3 agree → no rescoring</span></div>
+        <div class="node" style="border-color:rgba(52,211,153,.45)"><b class="accent-g">✅ Финал</b><span>3/3 согласны → пересчёт не нужен</span></div>
       </div>
       <div class="grid g3 rise d5" style="margin-top:24px;">
-        <div class="card"><h3>Independence</h3><p>Each judge works alone, never sees the others' scores until the vote.</p></div>
-        <div class="card"><h3>Live testing</h3><p>Every entry executed against the running local model, not just read.</p></div>
-        <div class="card"><h3>Consensus</h3><p>A verdict only becomes final after all judges confirm it.</p></div>
+        <div class="card"><h3>Независимость</h3><p>Каждый судья работает один и не видит чужих оценок вплоть до раунда голосования.</p></div>
+        <div class="card"><h3>Живое тестирование</h3><p>Каждая работа реально выполнялась против работающей локальной модели, а не просто читалась.</p></div>
+        <div class="card"><h3>Консенсус</h3><p>Вердикт становится финальным только после подтверждения всеми судьями.</p></div>
       </div>
     </div>
   </section>
 
-  <!-- 3 · PROCESS STEPS -->
+  <!-- 3 · ШАГИ ПРОЦЕССА -->
   <section class="slide">
     <div class="inner">
-      <div class="kicker rise d1">Verification process</div>
-      <h2 class="rise d2">Five steps, every judge, every entry</h2>
+      <div class="kicker rise d1">Процесс верификации</div>
+      <h2 class="rise d2">Пять шагов — каждый судья, каждая работа</h2>
       <div class="steps rise d3" style="margin-top:18px;">
-        <div class="step"><p><b>Identical evaluator prompt</b> delivered to each of the 3 judges via <span class="mono accent-c">opencode run</span> — same instructions, no steering.</p></div>
-        <div class="step"><p><b>Static analysis:</b> read all six <span class="mono">index.html</span> files — single file, no frameworks/backend, requests only to <span class="mono">localhost:8000</span>, mandatory form, verbatim disclaimer, loading «думаю…» and error states.</p></div>
-        <div class="step"><p><b>Live test:</b> serve each entry (<span class="mono">python3 -m http.server 8080</span>), discover the model via <span class="mono">GET /v1/models</span>, replay the entry's own prompts with <span class="mono accent-c">curl http://localhost:8000/v1/chat/completions</span>.</p></div>
-        <div class="step"><p><b>Safety probes:</b> normal text → plan rendered · red-flag text «болит грудь» → request <b class="accent-r">must not be sent</b>, banner «немедленно обратитесь к врачу / 103» · LLM down → readable error.</p></div>
-        <div class="step"><p><b>Scoring &amp; chair:</b> identical JSON schema (6 participants × 6 criteria + summary) → chair model computes weighted means, flags hard-requirement failures, ranks, issues the verdict → vote round confirms it (<span class="mono">votes-r1.json</span>).</p></div>
+        <div class="step"><p><b>Единый промпт оценщика</b> доставлен каждому из 3 судей через <span class="mono accent-c">opencode run</span> — одинаковые инструкции, без намёков и подсказок.</p></div>
+        <div class="step"><p><b>Статический анализ:</b> полностью прочитать все шесть файлов <span class="mono">index.html</span> — один файл, без фреймворков/бэкенда, запросы только на <span class="mono">localhost:8000</span>, обязательная форма, дословный дисклеймер, состояния загрузки «думаю…» и ошибки.</p></div>
+        <div class="step"><p><b>Живой тест:</b> запустить каждую работу (<span class="mono">python3 -m http.server 8080</span>), узнать модель через <span class="mono">GET /v1/models</span>, воспроизвести собственные промпты работы через <span class="mono accent-c">curl http://localhost:8000/v1/chat/completions</span>.</p></div>
+        <div class="step"><p><b>Проверки безопасности:</b> обычный текст → план отрисован · текст с красным флагом «болит грудь» → запрос <b class="accent-r">не должен отправляться</b>, баннер «немедленно обратитесь к врачу / 103» · LLM недоступна → читаемая ошибка.</p></div>
+        <div class="step"><p><b>Оценки и председатель:</b> единая JSON-схема (6 участников × 6 критериев + summary) → модель-председатель считает взвешенные средние, отмечает провалы обязательных требований, ранжирует, выносит вердикт → раунд голосования подтверждает его (<span class="mono">votes-r1.json</span>).</p></div>
       </div>
     </div>
   </section>
 
-  <!-- 4 · JUDGES -->
+  <!-- 4 · СУДЬИ -->
   <section class="slide">
     <div class="inner">
-      <div class="kicker rise d1">The models &amp; their meaning</div>
-      <h2 class="rise d2">Three independent judges</h2>
-      <p class="sub rise d3">Each judge ran the full pipeline alone: static read → live curl probes → scored report. Confidence is self-reported.</p>
+      <div class="kicker rise d1">Модели и их роли</div>
+      <h2 class="rise d2">Три независимых судьи</h2>
+      <p class="sub rise d3">Каждый судья проходил весь конвейер в одиночку: статическое чтение → живые curl-проверки → оценённый отчёт. Уверенность — самооценка модели.</p>
       <div class="grid g3 rise d4" style="margin-top:24px;">
         <div class="card judge" style="--jc:var(--cyan)">
-          <div class="role">Judge 1</div>
+          <div class="role">Судья 1</div>
           <h3 class="mono">glm-5.3-flash</h3>
-          <p>Depth specialist: hardest on robustness — probed timeouts, 400-fallback, <span class="mono">finish_reason=length</span>, empty answers, escape-first markdown and prompt-injection defenses.</p>
-          <div class="conf">own_confidence <b>0.86</b></div>
+          <p>Специалист по глубине: строже всех к устойчивости — проверял таймауты, 400-fallback, <span class="mono">finish_reason=length</span>, пустые ответы, escape-first markdown и защиту от prompt-injection.</p>
+          <div class="conf"><span class="mono">own_confidence</span> <b>0.86</b></div>
           <div class="confmeter" style="--cw:86%"><i></i></div>
         </div>
         <div class="card judge" style="--jc:var(--violet)">
-          <div class="role">Judge 2</div>
+          <div class="role">Судья 2</div>
           <h3 class="mono">mimo-v2.6-flash</h3>
-          <p>Behavioral specialist: ran a 9-case red-flag battery with a fetch-spy, verified <b>zero network calls</b> before the banner and measured live response times (15.5–19.4 s).</p>
-          <div class="conf">own_confidence <b>0.85</b></div>
+          <p>Специалист по поведению: прогонял батарею из 9 красных флагов со «шпионом fetch», проверял <b>ноль сетевых запросов</b> до баннера и замерял время живых ответов (15.5–19.4 с).</p>
+          <div class="conf"><span class="mono">own_confidence</span> <b>0.85</b></div>
           <div class="confmeter" style="--cw:85%"><i></i></div>
         </div>
         <div class="card judge" style="--jc:var(--green)">
-          <div class="role">Judge 3</div>
+          <div class="role">Судья 3</div>
           <h3 class="mono">qwen3.7-plus</h3>
-          <p>Spec-compliance specialist: strict on TASK.md requirements — verbatim disclaimer wording, checkbox form semantics, Cyrillic-aware regex coverage and privacy hardening.</p>
-          <div class="conf">own_confidence <b>0.82</b></div>
+          <p>Специалист по соответствию спецификации: строг к требованиям TASK.md — дословный дисклеймер, семантика чекбоксов формы, покрытие кириллических regex и защита приватности.</p>
+          <div class="conf"><span class="mono">own_confidence</span> <b>0.82</b></div>
           <div class="confmeter" style="--cw:82%"><i></i></div>
         </div>
       </div>
       <p class="rise d5" style="margin-top:20px; color:var(--muted); font-size:13.5px;">
-        Full transcripts: <span class="mono">judge/results/log-judge{1,2,3}.txt</span> · reports: <span class="mono">judge{1,2,3}.json</span>
+        Полные транскрипты: <span class="mono">judge/results/log-judge{1,2,3}.txt</span> · отчёты: <span class="mono">judge{1,2,3}.json</span>
       </p>
     </div>
   </section>
 
-  <!-- 5 · CHAIR -->
+  <!-- 5 · ПРЕДСЕДАТЕЛЬ -->
   <section class="slide">
     <div class="inner">
-      <div class="kicker rise d1">The models &amp; their meaning</div>
-      <h2 class="rise d2">The chair — <span class="mono accent-v">minimax-m3</span></h2>
+      <div class="kicker rise d1">Модели и их роли</div>
+      <h2 class="rise d2">Председатель — <span class="mono accent-v">minimax-m3</span></h2>
       <div class="grid g2 rise d3" style="margin-top:20px;">
         <div class="card judge" style="--jc:var(--violet)">
-          <div class="role">Chair · final verdict</div>
-          <h3>Aggregator, not another opinion</h3>
-          <p>Received all three judge reports and:</p>
+          <div class="role">Председатель · финальный вердикт</div>
+          <h3>Агрегатор, а не ещё одно мнение</h3>
+          <p>Получил все три судейских отчёта и:</p>
           <ul style="margin:10px 0 0 18px;">
-            <li>computed the mean <span class="mono">summary_score</span> per participant across judges</li>
-            <li>broke ties in favor of higher <span class="mono">redflag_safety</span> and <span class="mono">privacy_architecture</span></li>
-            <li>flagged hard-requirement failures as disqualified from winning</li>
-            <li>ranked entries and issued the single verdict</li>
+            <li>посчитал среднее <span class="mono">summary_score</span> по каждому участнику среди судей</li>
+            <li>разводил ничьи в пользу более высоких <span class="mono">redflag_safety</span> и <span class="mono">privacy_architecture</span></li>
+            <li>помечал провалы обязательных требований как дисквалификацию с победы</li>
+            <li>ранжировал работы и выносил единый вердикт</li>
           </ul>
-          <div class="conf">transcript <span class="mono">log-final-r1.txt</span> · <span class="mono">used_tiebreak: false</span></div>
+          <div class="conf">транскрипт <span class="mono">log-final-r1.txt</span> · <span class="mono">used_tiebreak: false</span></div>
         </div>
         <div class="card">
-          <h3>Three prompts, three moments</h3>
-          <p style="margin-top:8px;"><b class="accent-c">Evaluator</b> (×3 judges) — static checklist + mandatory live test + exact JSON output.</p>
-          <p style="margin-top:10px;"><b class="accent-v">Chair</b> — means, tie-break rule, hard-req flags; returns exactly <span class="mono">{"winner","ranking","reason","used_tiebreak"}</span>.</p>
-          <p style="margin-top:10px;"><b class="accent-g">Vote</b> — each judge sees the verdict and answers only <span class="mono">{"judge_id","agree"}</span>.</p>
-          <p style="margin-top:10px;">Full texts: <span class="mono">evaluator-prompt.md · final-prompt.md</span></p>
+          <h3>Три промпта, три момента</h3>
+          <p style="margin-top:8px;"><b class="accent-c">Оценщик</b> (×3 судьи) — статический чек-лист + обязательный живой тест + строгий JSON-вывод.</p>
+          <p style="margin-top:10px;"><b class="accent-v">Председатель</b> — средние, правило ничьей, флаги hard-требований; возвращает ровно <span class="mono">{"winner","ranking","reason","used_tiebreak"}</span>.</p>
+          <p style="margin-top:10px;"><b class="accent-g">Голосование</b> — каждый судья видит вердикт и отвечает только <span class="mono">{"judge_id","agree"}</span>.</p>
+          <p style="margin-top:10px;">Полные тексты: <span class="mono">evaluator-prompt.md · final-prompt.md</span></p>
         </div>
       </div>
       <div class="card rise d4" style="margin-top:18px;">
-        <h3>What the vote decided</h3>
-        <p>3/3 agree → the rescoring round was <b class="accent-g">not triggered</b> — the chair's verdict stood as final, with no second pass needed.</p>
+        <h3>Что решил раунд голосования</h3>
+        <p>3/3 согласны → раунд пересчёта <b class="accent-g">не запускался</b> — вердикт председателя остался финальным, второго прохода не потребовалось.</p>
       </div>
     </div>
   </section>
 
-  <!-- 6 · RUBRIC -->
+  <!-- 6 · РУБРИКА -->
   <section class="slide">
     <div class="inner">
-      <div class="kicker rise d1">Scoring</div>
-      <h2 class="rise d2">Rubric &amp; hard requirements</h2>
+      <div class="kicker rise d1">Оценивание</div>
+      <h2 class="rise d2">Критерии и обязательные требования</h2>
       <div class="grid g2 rise d3" style="margin-top:20px;">
         <div class="card">
-          <h3>Six criteria, 0–10 each</h3>
+          <h3>Шесть критериев, 0–10 каждый</h3>
           <table style="margin-top:10px;">
-            <tr><td>functionality</td><td class="num"><span class="tag c">×1.5</span></td></tr>
-            <tr><td>redflag_safety</td><td class="num"><span class="tag c">×1.5</span></td></tr>
-            <tr><td>disclaimer_prompt_quality</td><td class="num"><span class="tag c">×1.5</span></td></tr>
-            <tr><td>privacy_architecture</td><td class="num"><span class="tag c">×1.5</span></td></tr>
-            <tr><td>ux_resilience</td><td class="num"><span class="tag">×1.0</span></td></tr>
-            <tr><td>code_security_complexity</td><td class="num"><span class="tag">×1.0</span></td></tr>
+            <tr><td class="mono">functionality</td><td class="num"><span class="tag c">×1.5</span></td></tr>
+            <tr><td class="mono">redflag_safety</td><td class="num"><span class="tag c">×1.5</span></td></tr>
+            <tr><td class="mono">disclaimer_prompt_quality</td><td class="num"><span class="tag c">×1.5</span></td></tr>
+            <tr><td class="mono">privacy_architecture</td><td class="num"><span class="tag c">×1.5</span></td></tr>
+            <tr><td class="mono">ux_resilience</td><td class="num"><span class="tag">×1.0</span></td></tr>
+            <tr><td class="mono">code_security_complexity</td><td class="num"><span class="tag">×1.0</span></td></tr>
           </table>
-          <p style="margin-top:10px;"><span class="mono accent-c">summary_score</span> = weighted mean; criteria 1–4 weighted ×1.5.</p>
+          <p style="margin-top:10px;"><span class="mono accent-c">summary_score</span> = взвешенное среднее; критерии 1–4 с весом ×1.5.</p>
         </div>
         <div class="card" style="border-top:3px solid var(--red)">
-          <h3>Hard requirements (TASK.md)</h3>
-          <p style="margin-top:10px;"><b class="accent-r">1 · Red-flag gate before the LLM:</b> chest pain, dyspnea, bleeding, fainting, suicidal thoughts, T&nbsp;&gt;&nbsp;39&nbsp;°C, acute abdominal pain, stroke signs → red banner «немедленно обратитесь к врачу / 103», <b>no LLM call</b>.</p>
-          <p style="margin-top:12px;"><b class="accent-r">2 · Verbatim disclaimer:</b> «Материал носит образовательный характер и не является медицинской рекомендацией.»</p>
-          <p style="margin-top:12px;"><b class="accent-r">3 · Privacy:</b> requests only to <span class="mono">localhost:8000</span> — any non-local host disqualifies.</p>
-          <p style="margin-top:12px;">A failure on any of these = <b class="accent-r">disqualified from winning</b>, regardless of score.</p>
+          <h3>Обязательные требования (TASK.md)</h3>
+          <p style="margin-top:10px;"><b class="accent-r">1 · Краснофлаговый гейт до вызова LLM:</b> боль в груди, одышка, кровотечение, обморок, суицидальные мысли, T&nbsp;&gt;&nbsp;39&nbsp;°C, острая боль в животе, признаки инсульта → красный баннер «немедленно обратитесь к врачу / 103», <b>без вызова LLM</b>.</p>
+          <p style="margin-top:12px;"><b class="accent-r">2 · Дословный дисклеймер:</b> «Материал носит образовательный характер и не является медицинской рекомендацией.»</p>
+          <p style="margin-top:12px;"><b class="accent-r">3 · Приватность:</b> запросы только на <span class="mono">localhost:8000</span> — любой не-локальный хост ведёт к дисквалификации.</p>
+          <p style="margin-top:12px;">Провал любого пункта = <b class="accent-r">отстранение от победы</b>, независимо от баллов.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 7 · SCORES -->
+  <!-- 7 · ОЦЕНКИ -->
   <section class="slide">
     <div class="inner">
-      <div class="kicker rise d1">Results</div>
-      <h2 class="rise d2">Scores by judge → mean → verdict</h2>
+      <div class="kicker rise d1">Результаты</div>
+      <h2 class="rise d2">Оценки судей → среднее → вердикт</h2>
       <div class="card rise d3" style="margin-top:20px; overflow-x:auto;">
         <table>
-          <tr><th>Participant</th><th class="num">GLM-5.3-Flash</th><th class="num">MiMo-V2.6-Flash</th><th class="num">Qwen3.7-Plus</th><th class="num">Mean</th><th>Chair verdict</th></tr>
-          <tr class="win"><td>🏆 self369heal-cmyk</td><td class="num">9.25</td><td class="num">9.50</td><td class="num">9.50</td><td class="num"><b class="accent-o">9.42</b></td><td class="ok">Winner</td></tr>
-          <tr><td>Olyshka</td><td class="num">9.19</td><td class="num">9.22</td><td class="num">8.69</td><td class="num"><b>9.03</b></td><td class="ok">Runner-up (eligible)</td></tr>
-          <tr><td>crashmax</td><td class="num">8.38</td><td class="num">9.28</td><td class="num">8.69</td><td class="num"><b>8.78</b></td><td class="ok">Runner-up (eligible)</td></tr>
-          <tr class="fail"><td>artur</td><td class="num">8.41</td><td class="num">8.31</td><td class="num">8.75</td><td class="num"><b>8.49</b></td><td>Hard-req fail: red-flag gate</td></tr>
-          <tr class="fail"><td>kopytov</td><td class="num">7.81</td><td class="num">7.75</td><td class="num">7.75</td><td class="num"><b>7.77</b></td><td>Hard-req fail: disclaimer + gate</td></tr>
-          <tr class="fail"><td>mira</td><td class="num">5.47</td><td class="num">5.66</td><td class="num">4.81</td><td class="num"><b>5.31</b></td><td>Hard-req fail: gate only 3/16</td></tr>
+          <tr><th>Участник</th><th class="num">GLM-5.3-Flash</th><th class="num">MiMo-V2.6-Flash</th><th class="num">Qwen3.7-Plus</th><th class="num">Среднее</th><th>Вердикт председателя</th></tr>
+          <tr class="win"><td>🏆 self369heal-cmyk</td><td class="num">9.25</td><td class="num">9.50</td><td class="num">9.50</td><td class="num"><b class="accent-o">9.42</b></td><td class="ok">Победитель</td></tr>
+          <tr><td>Olyshka</td><td class="num">9.19</td><td class="num">9.22</td><td class="num">8.69</td><td class="num"><b>9.03</b></td><td class="ok">Финалист (допущен)</td></tr>
+          <tr><td>crashmax</td><td class="num">8.38</td><td class="num">9.28</td><td class="num">8.69</td><td class="num"><b>8.78</b></td><td class="ok">Финалист (допущен)</td></tr>
+          <tr class="fail"><td>artur</td><td class="num">8.41</td><td class="num">8.31</td><td class="num">8.75</td><td class="num"><b>8.49</b></td><td>Провал hard-требования: краснофлаговый гейт</td></tr>
+          <tr class="fail"><td>kopytov</td><td class="num">7.81</td><td class="num">7.75</td><td class="num">7.75</td><td class="num"><b>7.77</b></td><td>Провал hard-требования: дисклеймер + гейт</td></tr>
+          <tr class="fail"><td>mira</td><td class="num">5.47</td><td class="num">5.66</td><td class="num">4.81</td><td class="num"><b>5.31</b></td><td>Провал hard-требования: гейт ловит лишь 3/16</td></tr>
         </table>
       </div>
       <p class="rise d4" style="margin-top:16px; color:var(--muted); font-size:13.5px;">
-        Remarkable spread: the judges scored within <b class="accent-c">±0.31</b> of each other on the winner — near-perfect consensus on who built the safest site.
+        Поразительный разброс: судьи разошлись на <b class="accent-c">±0.31</b> в оценках победителя — почти идеальный консенсус по тому, кто построил самый безопасный сайт.
       </p>
     </div>
   </section>
 
-  <!-- 8 · INSIGHTS -->
+  <!-- 8 · НАБЛЮДЕНИЯ -->
   <section class="slide">
     <div class="inner">
-      <div class="kicker rise d1">What each judge found</div>
-      <h2 class="rise d2">Key insights from the reports</h2>
+      <div class="kicker rise d1">Что нашли судьи</div>
+      <h2 class="rise d2">Ключевые наблюдения из отчётов</h2>
       <div class="grid g3 rise d3" style="margin-top:22px;">
         <div class="card judge" style="--jc:var(--cyan)">
-          <div class="role">Judge 1 · GLM</div>
-          <p><b class="accent-c">self369heal-cmyk</b> — best overall: CSP lock, gate 13/16 with labeled reasons, survives timeouts / 400 / length / empty answers, escape-first markdown + anti-injection rule.</p>
-          <p style="margin-top:10px;"><b class="accent-r">artur</b>'s gate misses «болит грудь», «болит живот» — the LLM gets called on red flags. <b>kopytov</b>: disclaimer absent.</p>
+          <div class="role">Судья 1 · GLM</div>
+          <p><b class="accent-c">self369heal-cmyk</b> — лучший в целом: CSP-блокировка, гейт 13/16 с подписанными причинами, переживает таймауты / 400 / length / пустые ответы, escape-first markdown + правило анти-инъекции.</p>
+          <p style="margin-top:10px;"><b class="accent-r">artur</b> — гейт пропускает «болит грудь», «болит живот», LLM вызывается на красных флагах. <b>kopytov</b>: дисклеймер отсутствует.</p>
         </div>
         <div class="card judge" style="--jc:var(--violet)">
-          <div class="role">Judge 2 · MiMo</div>
-          <p>Live battery 9/9 with a fetch-spy: <b class="accent-r">artur's page really sent a chat/completions request</b> on «болит грудь» and rendered a plan instead of the doctor banner.</p>
-          <p style="margin-top:10px;"><b>crashmax</b>: 9/9 with zero fetches, live 5-section plan in 19.4 s. <b>kopytov</b>: 0 occurrences of the verbatim disclaimer.</p>
+          <div class="role">Судья 2 · MiMo</div>
+          <p>Живая батарея 9/9 со шпионом fetch: страница <b class="accent-r">artur действительно отправила запрос chat/completions</b> на «болит грудь» и показала план вместо баннера врача.</p>
+          <p style="margin-top:10px;"><b>crashmax</b>: 9/9 с нулём fetch, живой 5-секционный план за 19.4 с. <b>kopytov</b>: 0 вхождений дословного дисклеймера.</p>
         </div>
         <div class="card judge" style="--jc:var(--green)">
-          <div class="role">Judge 3 · Qwen</div>
-          <p><b class="accent-g">self369heal-cmyk</b> — most privacy-hardened and safety-complete entry; <b>Olyshka</b> forces the disclaimer through its 4-section system prompt with 9 Cyrillic-aware regexes.</p>
-          <p style="margin-top:10px;"><b class="accent-r">mira</b>: template with TODOs left in, gate covers 2 categories only.</p>
+          <div class="role">Судья 3 · Qwen</div>
+          <p><b class="accent-g">self369heal-cmyk</b> — самая защищённая по приватности и полная по безопасности работа; <b>Olyshka</b> форсирует дисклеймер через 4-секционный системный промпт с 9 кириллическими regex.</p>
+          <p style="margin-top:10px;"><b class="accent-r">mira</b>: шаблон с оставленными TODO, гейт покрывает лишь 2 категории.</p>
         </div>
       </div>
       <div class="card rise d4" style="margin-top:18px;">
-        <p><b class="accent-o">Common thread:</b> scores diverged on UX polish, but all three judges converged on the same safety facts — who gated red flags pre-LLM, who kept the verbatim disclaimer, who stayed localhost-only. That convergence is what let the chair rule without a tie-break.</p>
+        <p><b class="accent-o">Общая нить:</b> оценки расходились по UX-полировке, но все три судьи сошлись на одних и тех же фактах безопасности — кто гейтит красные флаги до LLM, у кого дословный дисклеймер, кто остался только на localhost. Именно эта сходимость позволила председателю решить всё без ничьей.</p>
       </div>
     </div>
   </section>
 
-  <!-- 9 · VERDICT -->
+  <!-- 9 · ВЕРДИКТ -->
   <section class="slide">
     <div class="inner">
-      <div class="kicker rise d1">Final verdict · chair minimax-m3</div>
+      <div class="kicker rise d1">Финальный вердикт · председатель minimax-m3</div>
       <div class="verdict-hero rise d2">
         <div class="cup">🏆</div>
         <div>
-          <div style="font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted);">Winner</div>
+          <div style="font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted);">Победитель</div>
           <div class="name mono">self369heal-cmyk</div>
-          <div style="color:var(--muted); margin-top:4px;">mean summary_score <b class="accent-o num">9.42</b> · unanimous #1 · <span class="mono">used_tiebreak: false</span></div>
+          <div style="color:var(--muted); margin-top:4px;">среднее <span class="mono">summary_score</span> <b class="accent-o num">9.42</b> · единогласный №1 · <span class="mono">used_tiebreak: false</span></div>
         </div>
       </div>
       <div class="grid g2 rise d3" style="margin-top:18px;">
         <div class="card">
-          <h3 class="accent-g">Why it won</h3>
+          <h3 class="accent-g">Почему победил</h3>
           <ul style="margin:10px 0 0 18px; color:var(--muted); font-size:14.5px; line-height:1.6;">
-            <li>leads the mean: 9.42 vs Olyshka 9.03, crashmax 8.78</li>
-            <li>CSP locks networking to <span class="mono">localhost:8000</span> — privacy 10/10 across judges</li>
-            <li>red-flag gate catches «болит грудь» <b>before any fetch</b></li>
-            <li>verbatim disclaimer present</li>
+            <li>лидирует по среднему: 9.42 против 9.03 (Olyshka) и 8.78 (crashmax)</li>
+            <li>CSP блокирует сеть до <span class="mono">localhost:8000</span> — приватность 10/10 у всех судей</li>
+            <li>краснофлаговый гейт ловит «болит грудь» <b>до любого fetch</b></li>
+            <li>дословный дисклеймер на месте</li>
           </ul>
         </div>
         <div class="card" style="border-top:3px solid var(--red)">
-          <h3 class="accent-r">Flagged: hard-requirement failures</h3>
+          <h3 class="accent-r">Помечены: провалы обязательных требований</h3>
           <ul style="margin:10px 0 0 18px; color:var(--muted); font-size:14.5px; line-height:1.6;">
-            <li><b>artur</b> — gate misses «болит грудь», LLM called on red flags</li>
-            <li><b>kopytov</b> — mandatory verbatim disclaimer omitted + gate miss</li>
-            <li><b>mira</b> — gate catches only 3/16 red-flag cases</li>
-            <li><b>Olyshka</b> &amp; <b>crashmax</b> — eligible runners-up, lower mean</li>
+            <li><b>artur</b> — гейт пропускает «болит грудь», LLM вызывается на красных флагах</li>
+            <li><b>kopytov</b> — обязательный дословный дисклеймер отсутствует + пропуск гейта</li>
+            <li><b>mira</b> — гейт ловит лишь 3/16 краснофлаговых случаев</li>
+            <li><b>Olyshka</b> и <b>crashmax</b> — допущенные финалисты с более низким средним</li>
           </ul>
         </div>
       </div>
       <div class="votes rise d4">
-        <div class="vote"><span class="mono">glm-5.3-flash</span> · <span class="ok">✅ agree</span></div>
-        <div class="vote"><span class="mono">mimo-v2.6-flash</span> · <span class="ok">✅ agree</span></div>
-        <div class="vote"><span class="mono">qwen3.7-plus</span> · <span class="ok">✅ agree</span></div>
-        <div class="vote" style="border-color:rgba(52,211,153,.5)"><b class="accent-g">3/3 — verdict final</b></div>
+        <div class="vote"><span class="mono">glm-5.3-flash</span> · <span class="ok">✅ согласен</span></div>
+        <div class="vote"><span class="mono">mimo-v2.6-flash</span> · <span class="ok">✅ согласен</span></div>
+        <div class="vote"><span class="mono">qwen3.7-plus</span> · <span class="ok">✅ согласен</span></div>
+        <div class="vote" style="border-color:rgba(52,211,153,.5)"><b class="accent-g">3/3 — вердикт финален</b></div>
       </div>
     </div>
   </section>
 
-  <!-- 10 · TIER LIST -->
+  <!-- 10 · ТИР-ЛИСТ -->
   <section class="slide">
     <div class="inner">
-      <div class="kicker rise d1">Tier list</div>
-      <h2 class="rise d2">Where everyone landed</h2>
+      <div class="kicker rise d1">Тир-лист</div>
+      <h2 class="rise d2">Где каждый оказался</h2>
       <div class="card rise d3" style="margin-top:22px;">
         <div class="bar-row"><span class="mono">🥇 self369heal-cmyk</span><div class="bar-track"><div class="bar-fill" style="--w:94.2%; background:linear-gradient(90deg,var(--gold),#fff3c4)"></div></div><b class="num accent-o">S · 9.42</b></div>
         <div class="bar-row"><span class="mono">🥈 Olyshka</span><div class="bar-track"><div class="bar-fill" style="--w:90.3%; background:linear-gradient(90deg,#94a3b8,#e2e8f0)"></div></div><b class="num">S · 9.03</b></div>
@@ -554,53 +555,53 @@
         <div class="bar-row"><span class="mono">mira</span><div class="bar-track"><div class="bar-fill" style="--w:53.1%; background:linear-gradient(90deg,#7c3aed,#a78bfa)"></div></div><b class="num">B · 5.31</b></div>
       </div>
       <p class="rise d4" style="margin-top:16px; color:var(--muted); font-size:13.5px;">
-        S = winner tier · A = strong build, hard-req failures for artur &amp; kopytov · B = template-level entry.
-        Tiers from <span class="mono">judge/results/tierlist.md</span>.
+        S — тир победителя · A — сильная сборка, но у artur и kopytov провалены hard-требования · B — работа на уровне шаблона.
+        Тиры взяты из <span class="mono">judge/results/tierlist.md</span>.
       </p>
     </div>
   </section>
 
-  <!-- 11 · ARTIFACTS -->
+  <!-- 11 · АРТЕФАКТЫ -->
   <section class="slide">
     <div class="inner">
-      <div class="kicker rise d1">Reproducibility</div>
-      <h2 class="rise d2">Every step left an artifact</h2>
+      <div class="kicker rise d1">Воспроизводимость</div>
+      <h2 class="rise d2">Каждый шаг оставил артефакт</h2>
       <div class="grid g2 rise d3" style="margin-top:22px;">
         <div class="card">
           <table>
-            <tr><th>File · <span class="mono">judge/results/</span></th><th>Content</th></tr>
-            <tr><td class="mono">winner.json</td><td>final verdict (winner, ranking, reason)</td></tr>
-            <tr><td class="mono">tierlist.md</td><td>tier table</td></tr>
-            <tr><td class="mono">analytics-&lt;p&gt;.md</td><td>per-project: all 3 judges' criteria + notes</td></tr>
-            <tr><td class="mono">judge{1,2,3}.json</td><td>extracted judge reports</td></tr>
-            <tr><td class="mono">log-judge{1,2,3}.txt</td><td>full judge transcripts incl. live-test commands</td></tr>
-            <tr><td class="mono">log-final-r1.txt</td><td>chair model transcript</td></tr>
-            <tr><td class="mono">votes-r1.json</td><td>per-judge agree votes</td></tr>
+            <tr><th>Файл · <span class="mono">judge/results/</span></th><th>Содержимое</th></tr>
+            <tr><td class="mono">winner.json</td><td>финальный вердикт (победитель, ранжирование, обоснование)</td></tr>
+            <tr><td class="mono">tierlist.md</td><td>таблица тиров</td></tr>
+            <tr><td class="mono">analytics-&lt;p&gt;.md</td><td>разбор по проекту: оценки критериев всех 3 судей + заметки</td></tr>
+            <tr><td class="mono">judge{1,2,3}.json</td><td>извлечённые отчёты судей</td></tr>
+            <tr><td class="mono">log-judge{1,2,3}.txt</td><td>полные транскрипты судей, включая команды живых тестов</td></tr>
+            <tr><td class="mono">log-final-r1.txt</td><td>транскрипт модели-председателя</td></tr>
+            <tr><td class="mono">votes-r1.json</td><td>голоса судей (согласен/нет)</td></tr>
           </table>
         </div>
         <div class="card">
-          <h3>Re-run the whole verification</h3>
-          <p style="margin-top:10px;">The pipeline is a single command:</p>
+          <h3>Повторить всю верификацию</h3>
+          <p style="margin-top:10px;">Весь конвейер — одна команда:</p>
           <p class="mono accent-c" style="margin-top:10px; background:rgba(34,211,238,.07); border:1px solid rgba(34,211,238,.25); border-radius:10px; padding:12px 14px;">judge/run.sh</p>
-          <p style="margin-top:14px;">Requires the local model up at <span class="mono">localhost:8000/v1</span> (Gemma-4-E2B agent) and <span class="mono">opencode run</span> for the judge agents.</p>
+          <p style="margin-top:14px;">Нужна модель на <span class="mono">localhost:8000/v1</span> (агент Gemma-4-E2B) и <span class="mono">opencode run</span> для агентов-судей.</p>
           <div style="margin-top:14px;">
-            <span class="tag c">same prompt × 3</span><span class="tag v">live curl probes</span><span class="tag g">JSON schema locked</span><span class="tag o">vote-gated verdict</span>
+            <span class="tag c">один промпт × 3</span><span class="tag v">живые curl-проверки</span><span class="tag g">жёсткая JSON-схема</span><span class="tag o">вердикт через голосование</span>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 12 · FINAL: CONGRATULATIONS -->
+  <!-- 12 · ФИНАЛ: ПОЗДРАВЛЕНИЕ -->
   <section class="slide final" data-final>
     <div class="confetti" id="confetti"></div>
     <div class="inner">
       <div class="trophy">🏆</div>
-      <div class="congrats" id="congrats" aria-label="Congratulations!"></div>
-      <div class="winner-name">The local-LLM champion: <span class="hl mono">self369heal-cmyk</span></div>
+      <div class="congrats" id="congrats" aria-label="Поздравляем!"></div>
+      <div class="winner-name">Чемпион локального LLM: <span class="hl mono">self369heal-cmyk</span></div>
       <div class="score-badge">
         <span class="score num" id="scoreNum">0.00</span>
-        <span class="lbl">mean summary_score<br>unanimous #1 across all 3 judges</span>
+        <span class="lbl">среднее <span class="mono">summary_score</span><br>единогласный №1 среди всех 3 судей</span>
       </div>
       <div class="medals">
         <div class="medal">🥇 <b>self369heal-cmyk</b> · 9.42</div>
@@ -613,7 +614,7 @@
         <div class="vote"><span class="mono">qwen3.7-plus</span> <span class="ok">✅</span></div>
       </div>
       <p class="rise d5" style="margin-top:22px; color:var(--muted); font-size:14px; z-index:2;">
-        Verified by 3 independent judges · confirmed by chair <span class="mono">minimax-m3</span> · ratified 3/3 🎉
+        Проверено 3 независимыми судьями · вердикт председателя <span class="mono">minimax-m3</span> · ратифицировано 3/3 🎉
       </p>
     </div>
   </section>
@@ -622,10 +623,10 @@
 
 <div class="dots" id="dots"></div>
 <nav class="nav">
-  <button id="prev" title="Previous (←)">‹</button>
-  <button id="next" title="Next (→)">›</button>
+  <button id="prev" title="Назад (←)">‹</button>
+  <button id="next" title="Вперёд (→)">›</button>
 </nav>
-<div class="hint mono">← → navigate · Home/End · click dots · swipe</div>
+<div class="hint mono">← → навигация · Home/End · клик по точкам · свайп</div>
 
 <script>
 (function () {
@@ -691,11 +692,11 @@
     tx = null;
   }, { passive: true });
 
-  /* ---------- final slide FX ---------- */
+  /* ---------- FX финального слайда ---------- */
   const COLORS = ['#fbbf24', '#f472b6', '#34d399', '#22d3ee', '#a78bfa', '#f87171', '#ffffff'];
 
   function buildCongrats() {
-    const text = 'CONGRATULATIONS!';
+    const text = 'ПОЗДРАВЛЯЕМ!';
     congratsEl.innerHTML = '';
     Array.from(text).forEach((ch, i) => {
       const s = document.createElement('span');
