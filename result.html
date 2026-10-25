@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM-хакатон — Итоги и верификация</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --bg2: #101830;
+    --card: rgba(255,255,255,.04);
+    --line: rgba(255,255,255,.10);
+    --text: #e7ecf7;
+    --muted: #93a0bd;
+    --cyan: #22d3ee;
+    --violet: #a78bfa;
+    --green: #34d399;
+    --red: #f87171;
+    --gold: #fbbf24;
+    --pink: #f472b6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(1100px 600px at 85% -10%, rgba(167,139,250,.14), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(34,211,238,.12), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    overflow: hidden;
+  }
+  .mono { font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace; }
+
+  /* ---------- chrome ---------- */
+  .topbar {
+    position: fixed; inset: 0 0 auto 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 28px; font-size: 13px; color: var(--muted);
+  }
+  .topbar .brand { display: flex; align-items: center; gap: 10px; color: var(--text); }
+  .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 12px var(--cyan); }
+  .progress { position: fixed; top: 0; left: 0; height: 3px; width: 0; z-index: 60;
+    background: linear-gradient(90deg, var(--cyan), var(--violet), var(--pink));
+    transition: width .45s ease; }
+  .counter { font-variant-numeric: tabular-nums; }
+  .counter b { color: var(--text); }
+
+  .deck { position: fixed; inset: 0; }
+
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    padding: 76px 72px 104px;
+    opacity: 0; transform: translateX(46px) scale(.985);
+    transition: opacity .5s ease, transform .5s ease;
+    pointer-events: none; overflow-y: auto; overflow-x: hidden;
+  }
+  .slide.prev { transform: translateX(-46px) scale(.985); }
+  .slide.active { opacity: 1; transform: none; pointer-events: auto; }
+
+  .slide > .inner { margin: auto 0; width: 100%; max-width: 1180px; align-self: center; }
+
+  .kicker {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--cyan); margin-bottom: 14px;
+  }
+  .kicker::before { content: ""; width: 26px; height: 2px; background: var(--cyan); border-radius: 2px; }
+  h1 { font-size: clamp(38px, 6vw, 76px); line-height: 1.05; letter-spacing: -.02em; }
+  h2 { font-size: clamp(26px, 3.4vw, 40px); letter-spacing: -.01em; margin-bottom: 8px; }
+  .sub { color: var(--muted); font-size: clamp(15px, 1.6vw, 18px); max-width: 900px; }
+  .accent-c { color: var(--cyan); } .accent-v { color: var(--violet); }
+  .accent-g { color: var(--green); } .accent-r { color: var(--red); }
+  .accent-o { color: var(--gold); }
+
+  /* staggered reveal inside active slide */
+  .slide .rise { opacity: 0; transform: translateY(18px); transition: opacity .5s ease, transform .5s ease; }
+  .slide.active .rise { opacity: 1; transform: none; }
+  .slide.active .rise:nth-child(1), .slide.active .d1 { transition-delay: .08s; }
+  .slide.active .rise:nth-child(2), .slide.active .d2 { transition-delay: .18s; }
+  .slide.active .rise:nth-child(3), .slide.active .d3 { transition-delay: .28s; }
+  .slide.active .rise:nth-child(4), .slide.active .d4 { transition-delay: .38s; }
+  .slide.active .rise:nth-child(5), .slide.active .d5 { transition-delay: .48s; }
+  .slide.active .rise:nth-child(6), .slide.active .d6 { transition-delay: .58s; }
+
+  /* ---------- shared components ---------- */
+  .grid { display: grid; gap: 18px; }
+  .g2 { grid-template-columns: repeat(2, 1fr); }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 16px; padding: 20px 22px; backdrop-filter: blur(6px);
+  }
+  .card h3 { font-size: 18px; margin-bottom: 6px; }
+  .card p, .card li { color: var(--muted); font-size: 14.5px; line-height: 1.55; }
+  .tag {
+    display: inline-block; font-size: 11.5px; padding: 3px 10px; border-radius: 999px;
+    border: 1px solid var(--line); color: var(--muted); margin: 2px 4px 2px 0;
+  }
+  .tag.c { color: var(--cyan); border-color: rgba(34,211,238,.4); }
+  .tag.v { color: var(--violet); border-color: rgba(167,139,250,.4); }
+  .tag.g { color: var(--green); border-color: rgba(52,211,153,.4); }
+  .tag.o { color: var(--gold); border-color: rgba(251,191,36,.4); }
+  .tag.r { color: var(--red); border-color: rgba(248,113,113,.4); }
+  .num { font-variant-numeric: tabular-nums; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.win td { background: rgba(251,191,36,.07); }
+  tr.fail td:last-child { color: var(--red); }
+  tr.ok td:last-child { color: var(--green); }
+
+  .flow { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; }
+  .flow .node {
+    flex: 1 1 150px; min-width: 140px; text-align: center;
+    border: 1px solid var(--line); border-radius: 14px; padding: 16px 12px;
+    background: var(--card);
+  }
+  .flow .node b { display: block; font-size: 15px; margin-bottom: 4px; }
+  .flow .node span { font-size: 12.5px; color: var(--muted); }
+  .flow .arrow { align-self: center; color: var(--muted); font-size: 20px; }
+
+  .steps { counter-reset: step; }
+  .step { display: flex; gap: 16px; padding: 13px 0; border-bottom: 1px dashed var(--line); }
+  .step:last-child { border-bottom: 0; }
+  .step::before {
+    counter-increment: step; content: counter(step);
+    flex: 0 0 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(34,211,238,.12); color: var(--cyan);
+    font-weight: 700; border: 1px solid rgba(34,211,238,.35);
+  }
+  .step p { font-size: 14.5px; line-height: 1.55; color: var(--muted); }
+  .step b { color: var(--text); }
+
+  .bar-row { display: grid; grid-template-columns: 170px 1fr 70px; gap: 12px; align-items: center; padding: 9px 0; }
+  .bar-track { height: 14px; border-radius: 999px; background: rgba(255,255,255,.06); overflow: hidden; }
+  .bar-fill { height: 100%; width: 0; border-radius: 999px; transition: width 1s cubic-bezier(.2,.8,.2,1) .35s; }
+  .slide.active .bar-fill { width: var(--w); }
+
+  /* ---------- title slide ---------- */
+  .title-meta { display: flex; gap: 26px; flex-wrap: wrap; margin-top: 34px; }
+  .title-meta .card { padding: 14px 20px; }
+  .title-meta .k { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+  .title-meta .v { font-size: 16px; margin-top: 3px; }
+
+  /* ---------- judges ---------- */
+  .judge { border-top: 3px solid var(--jc); }
+  .judge .role { color: var(--jc); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; margin-bottom: 6px; }
+  .conf { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+  .conf b { color: var(--text); }
+  .confmeter { height: 6px; border-radius: 999px; background: rgba(255,255,255,.07); margin-top: 6px; overflow: hidden; }
+  .confmeter i { display: block; height: 100%; background: var(--jc); border-radius: 999px; width: 0; transition: width .9s ease .5s; }
+  .slide.active .confmeter i { width: var(--cw); }
+
+  /* ---------- verdict ---------- */
+  .verdict-hero {
+    display: flex; gap: 22px; align-items: center; flex-wrap: wrap;
+    border: 1px solid rgba(251,191,36,.4); border-radius: 18px; padding: 24px 28px;
+    background: linear-gradient(120deg, rgba(251,191,36,.10), rgba(244,114,182,.07));
+  }
+  .cup { font-size: 54px; filter: drop-shadow(0 4px 18px rgba(251,191,36,.45)); }
+  .verdict-hero .name { font-size: clamp(24px, 3vw, 36px); font-weight: 800; color: var(--gold); }
+  .votes { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 14px; }
+  .vote { border: 1px solid var(--line); border-radius: 12px; padding: 10px 16px; background: var(--card); font-size: 14px; }
+  .vote .ok { color: var(--green); font-weight: 700; }
+
+  /* ---------- final slide ---------- */
+  .slide.final {
+    align-items: center; justify-content: center; text-align: center;
+    background:
+      radial-gradient(900px 500px at 50% 20%, rgba(251,191,36,.16), transparent 65%),
+      radial-gradient(700px 400px at 50% 100%, rgba(244,114,182,.10), transparent 60%);
+  }
+  .final .inner { display: flex; flex-direction: column; align-items: center; }
+
+  .confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; }
+  .confetti i {
+    position: absolute; top: -6vh; left: var(--x);
+    width: var(--s); height: calc(var(--s) * 1.7);
+    background: var(--c);
+    border-radius: var(--br, 2px);
+    opacity: .9;
+    animation: fall var(--dur) linear var(--delay) infinite;
+  }
+  @keyframes fall {
+    to { transform: translate3d(var(--sway, 0px), 118vh, 0) rotate(var(--rot)); }
+  }
+
+  .trophy {
+    font-size: clamp(70px, 10vw, 120px); line-height: 1; z-index: 2;
+    animation: trophyIn .9s cubic-bezier(.2,.9,.3,1.5) both, trophyFloat 3s ease-in-out 1.1s infinite alternate;
+    filter: drop-shadow(0 6px 30px rgba(251,191,36,.5));
+  }
+  @keyframes trophyIn {
+    from { opacity: 0; transform: scale(0) rotate(-30deg); }
+    to   { opacity: 1; transform: scale(1) rotate(0); }
+  }
+  @keyframes trophyFloat {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-14px); }
+  }
+
+  .congrats { display: flex; gap: 2px; z-index: 2; flex-wrap: wrap; justify-content: center; }
+  .congrats span {
+    display: inline-block; font-size: clamp(26px, 4.6vw, 54px); font-weight: 900;
+    letter-spacing: .06em;
+    background: linear-gradient(92deg, var(--gold), #fff3c4, var(--gold));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    opacity: 0;
+    animation: letterIn .6s cubic-bezier(.2,.8,.3,1.5) both;
+  }
+  @keyframes letterIn {
+    from { opacity: 0; transform: translateY(34px) rotate(8deg) scale(.4); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .winner-name {
+    z-index: 2; margin-top: 12px;
+    font-size: clamp(24px, 4vw, 44px); font-weight: 800;
+    color: #fff; animation: winnerIn .8s ease .9s both;
+  }
+  .winner-name .hl { color: var(--gold); text-shadow: 0 0 24px rgba(251,191,36,.55); animation: glow 2.2s ease-in-out 1.6s infinite alternate; }
+  @keyframes winnerIn { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
+  @keyframes glow {
+    from { text-shadow: 0 0 10px rgba(251,191,36,.35); }
+    to   { text-shadow: 0 0 32px rgba(251,191,36,.9); }
+  }
+
+  .score-badge {
+    z-index: 2; margin-top: 16px; display: flex; align-items: baseline; gap: 12px;
+    border: 1px solid rgba(251,191,36,.45); border-radius: 999px;
+    padding: 10px 26px; background: rgba(251,191,36,.08);
+    animation: winnerIn .8s ease 1.2s both;
+  }
+  .score-badge .score { font-size: 40px; font-weight: 900; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .score-badge .lbl { color: var(--muted); font-size: 13px; }
+
+  .medals { z-index: 2; display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+  .medal { border: 1px solid var(--line); border-radius: 12px; padding: 9px 16px; background: var(--card); font-size: 14px; opacity: 0; animation: winnerIn .6s ease both; }
+  .medal:nth-child(1) { animation-delay: 1.5s; }
+  .medal:nth-child(2) { animation-delay: 1.7s; }
+  .medal:nth-child(3) { animation-delay: 1.9s; }
+  .medal b { color: var(--gold); }
+
+  .votes-final { z-index: 2; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+  .votes-final .vote { opacity: 0; animation: pop .5s cubic-bezier(.2,.9,.3,1.6) both; }
+  .votes-final .vote:nth-child(1) { animation-delay: 2.1s; }
+  .votes-final .vote:nth-child(2) { animation-delay: 2.3s; }
+  .votes-final .vote:nth-child(3) { animation-delay: 2.5s; }
+  @keyframes pop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: scale(1); } }
+
+  /* ---------- nav ---------- */
+  .nav {
+    position: fixed; bottom: 22px; right: 28px; z-index: 50;
+    display: flex; gap: 10px;
+  }
+  .nav button {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 1px solid var(--line); background: var(--card); color: var(--text);
+    font-size: 18px; cursor: pointer; transition: .2s;
+  }
+  .nav button:hover { border-color: var(--cyan); color: var(--cyan); transform: translateY(-2px); }
+  .nav button:disabled { opacity: .3; cursor: default; transform: none; }
+  .dots { position: fixed; bottom: 34px; left: 50%; transform: translateX(-50%); z-index: 50; display: flex; gap: 8px; }
+  .dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.18); cursor: pointer; transition: .25s; }
+  .dots i.on { background: var(--cyan); transform: scale(1.35); box-shadow: 0 0 8px rgba(34,211,238,.7); }
+  .hint { position: fixed; bottom: 30px; left: 28px; z-index: 50; font-size: 12px; color: var(--muted); }
+
+  @media (max-width: 900px) {
+    .slide { padding: 64px 22px 100px; }
+    .g3 { grid-template-columns: 1fr; }
+    .g2 { grid-template-columns: 1fr; }
+    .bar-row { grid-template-columns: 110px 1fr 60px; }
+    .hint { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<header class="topbar">
+  <div class="brand"><span class="dot"></span> LLM-хакатон · Итоги и верификация</div>
+  <div class="counter mono"><b id="cur">01</b> / <span id="total">12</span></div>
+</header>
+
+<main class="deck" id="deck">
+
+  <!-- 1 · ТИТУЛ -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">Хакатон локальных LLM · сборки за 30 минут</div>
+      <h1 class="rise d2">Результаты и<br><span class="accent-c">отчёт о верификации</span></h1>
+      <p class="sub rise d3">Как три независимых облачных LLM-судьи тестировали шесть однофайловых сайтов
+      превентивной медицины против <b class="accent-c">локальной модели</b> — и как модель-председатель
+      вынесла единогласный финальный вердикт.</p>
+      <div class="title-meta rise d4">
+        <div class="card"><div class="k">Дата</div><div class="v mono">2026-10-22</div></div>
+        <div class="card"><div class="k">Ветка скоринга</div><div class="v mono">jitterbot/scoring</div></div>
+        <div class="card"><div class="k">Тестируемая LLM</div><div class="v mono">localhost:8000/v1 · Gemma-4-E2B</div></div>
+        <div class="card"><div class="k">Метод</div><div class="v">3 судьи → 1 председатель → голос 3/3</div></div>
+      </div>
+      <p class="rise d5" style="margin-top:22px; color:var(--muted); font-size:13.5px;">
+        Живые тесты: каждый судья запускал каждую работу локально и проверял поведение через
+        <span class="mono accent-c">curl</span> + код — метод зафиксирован всеми судьями как <span class="mono">curl+code</span>.
+      </p>
+    </div>
+  </section>
+
+  <!-- 2 · КОНВЕЙЕР -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">Метод</div>
+      <h2 class="rise d2">Конвейер верификации</h2>
+      <p class="sub rise d3">Полностью автоматизирован через <span class="mono accent-c">judge/run.sh</span> + <span class="mono accent-c">judge/pipeline.py</span> — ни одного человека в цикле оценивания.</p>
+      <div class="flow rise d4" style="margin-top:26px;">
+        <div class="node"><b>🎯 Промпт оценщика</b><span>один и тот же промпт каждому судье через <span class="mono">opencode run</span></span></div>
+        <div class="arrow">→</div>
+        <div class="node"><b>⚖️ 3 судьи</b><span>GLM-5.3-Flash · MiMo-V2.6-Flash · Qwen3.7-Plus<br>независимый статический + живой анализ</span></div>
+        <div class="arrow">→</div>
+        <div class="node"><b>🧾 3 JSON-отчёта</b><span>единая схема: 6 участников × 6 критериев + summary</span></div>
+        <div class="arrow">→</div>
+        <div class="node"><b>🪑 Председатель</b><span>minimax-m3<br>взвешенные средние · флаги hard-требований · вердикт</span></div>
+        <div class="arrow">→</div>
+        <div class="node"><b>🗳️ Раунд голосования</b><span>судьи видят вердикт, отвечают <span class="mono">{"agree"}</span></span></div>
+        <div class="arrow">→</div>
+        <div class="node" style="border-color:rgba(52,211,153,.45)"><b class="accent-g">✅ Финал</b><span>3/3 согласны → пересчёт не нужен</span></div>
+      </div>
+      <div class="grid g3 rise d5" style="margin-top:24px;">
+        <div class="card"><h3>Независимость</h3><p>Каждый судья работает один и не видит чужих оценок вплоть до раунда голосования.</p></div>
+        <div class="card"><h3>Живое тестирование</h3><p>Каждая работа реально выполнялась против работающей локальной модели, а не просто читалась.</p></div>
+        <div class="card"><h3>Консенсус</h3><p>Вердикт становится финальным только после подтверждения всеми судьями.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · ШАГИ ПРОЦЕССА -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">Процесс верификации</div>
+      <h2 class="rise d2">Пять шагов — каждый судья, каждая работа</h2>
+      <div class="steps rise d3" style="margin-top:18px;">
+        <div class="step"><p><b>Единый промпт оценщика</b> доставлен каждому из 3 судей через <span class="mono accent-c">opencode run</span> — одинаковые инструкции, без намёков и подсказок.</p></div>
+        <div class="step"><p><b>Статический анализ:</b> полностью прочитать все шесть файлов <span class="mono">index.html</span> — один файл, без фреймворков/бэкенда, запросы только на <span class="mono">localhost:8000</span>, обязательная форма, дословный дисклеймер, состояния загрузки «думаю…» и ошибки.</p></div>
+        <div class="step"><p><b>Живой тест:</b> запустить каждую работу (<span class="mono">python3 -m http.server 8080</span>), узнать модель через <span class="mono">GET /v1/models</span>, воспроизвести собственные промпты работы через <span class="mono accent-c">curl http://localhost:8000/v1/chat/completions</span>.</p></div>
+        <div class="step"><p><b>Проверки безопасности:</b> обычный текст → план отрисован · текст с красным флагом «болит грудь» → запрос <b class="accent-r">не должен отправляться</b>, баннер «немедленно обратитесь к врачу / 103» · LLM недоступна → читаемая ошибка.</p></div>
+        <div class="step"><p><b>Оценки и председатель:</b> единая JSON-схема (6 участников × 6 критериев + summary) → модель-председатель считает взвешенные средние, отмечает провалы обязательных требований, ранжирует, выносит вердикт → раунд голосования подтверждает его (<span class="mono">votes-r1.json</span>).</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · СУДЬИ -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">Модели и их роли</div>
+      <h2 class="rise d2">Три независимых судьи</h2>
+      <p class="sub rise d3">Каждый судья проходил весь конвейер в одиночку: статическое чтение → живые curl-проверки → оценённый отчёт. Уверенность — самооценка модели.</p>
+      <div class="grid g3 rise d4" style="margin-top:24px;">
+        <div class="card judge" style="--jc:var(--cyan)">
+          <div class="role">Судья 1</div>
+          <h3 class="mono">glm-5.3-flash</h3>
+          <p>Специалист по глубине: строже всех к устойчивости — проверял таймауты, 400-fallback, <span class="mono">finish_reason=length</span>, пустые ответы, escape-first markdown и защиту от prompt-injection.</p>
+          <div class="conf"><span class="mono">own_confidence</span> <b>0.86</b></div>
+          <div class="confmeter" style="--cw:86%"><i></i></div>
+        </div>
+        <div class="card judge" style="--jc:var(--violet)">
+          <div class="role">Судья 2</div>
+          <h3 class="mono">mimo-v2.6-flash</h3>
+          <p>Специалист по поведению: прогонял батарею из 9 красных флагов со «шпионом fetch», проверял <b>ноль сетевых запросов</b> до баннера и замерял время живых ответов (15.5–19.4 с).</p>
+          <div class="conf"><span class="mono">own_confidence</span> <b>0.85</b></div>
+          <div class="confmeter" style="--cw:85%"><i></i></div>
+        </div>
+        <div class="card judge" style="--jc:var(--green)">
+          <div class="role">Судья 3</div>
+          <h3 class="mono">qwen3.7-plus</h3>
+          <p>Специалист по соответствию спецификации: строг к требованиям TASK.md — дословный дисклеймер, семантика чекбоксов формы, покрытие кириллических regex и защита приватности.</p>
+          <div class="conf"><span class="mono">own_confidence</span> <b>0.82</b></div>
+          <div class="confmeter" style="--cw:82%"><i></i></div>
+        </div>
+      </div>
+      <p class="rise d5" style="margin-top:20px; color:var(--muted); font-size:13.5px;">
+        Полные транскрипты: <span class="mono">judge/results/log-judge{1,2,3}.txt</span> · отчёты: <span class="mono">judge{1,2,3}.json</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- 5 · ПРЕДСЕДАТЕЛЬ -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">Модели и их роли</div>
+      <h2 class="rise d2">Председатель — <span class="mono accent-v">minimax-m3</span></h2>
+      <div class="grid g2 rise d3" style="margin-top:20px;">
+        <div class="card judge" style="--jc:var(--violet)">
+          <div class="role">Председатель · финальный вердикт</div>
+          <h3>Агрегатор, а не ещё одно мнение</h3>
+          <p>Получил все три судейских отчёта и:</p>
+          <ul style="margin:10px 0 0 18px;">
+            <li>посчитал среднее <span class="mono">summary_score</span> по каждому участнику среди судей</li>
+            <li>разводил ничьи в пользу более высоких <span class="mono">redflag_safety</span> и <span class="mono">privacy_architecture</span></li>
+            <li>помечал провалы обязательных требований как дисквалификацию с победы</li>
+            <li>ранжировал работы и выносил единый вердикт</li>
+          </ul>
+          <div class="conf">транскрипт <span class="mono">log-final-r1.txt</span> · <span class="mono">used_tiebreak: false</span></div>
+        </div>
+        <div class="card">
+          <h3>Три промпта, три момента</h3>
+          <p style="margin-top:8px;"><b class="accent-c">Оценщик</b> (×3 судьи) — статический чек-лист + обязательный живой тест + строгий JSON-вывод.</p>
+          <p style="margin-top:10px;"><b class="accent-v">Председатель</b> — средние, правило ничьей, флаги hard-требований; возвращает ровно <span class="mono">{"winner","ranking","reason","used_tiebreak"}</span>.</p>
+          <p style="margin-top:10px;"><b class="accent-g">Голосование</b> — каждый судья видит вердикт и отвечает только <span class="mono">{"judge_id","agree"}</span>.</p>
+          <p style="margin-top:10px;">Полные тексты: <span class="mono">evaluator-prompt.md · final-prompt.md</span></p>
+        </div>
+      </div>
+      <div class="card rise d4" style="margin-top:18px;">
+        <h3>Что решил раунд голосования</h3>
+        <p>3/3 согласны → раунд пересчёта <b class="accent-g">не запускался</b> — вердикт председателя остался финальным, второго прохода не потребовалось.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · РУБРИКА -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">Оценивание</div>
+      <h2 class="rise d2">Критерии и обязательные требования</h2>
+      <div class="grid g2 rise d3" style="margin-top:20px;">
+        <div class="card">
+          <h3>Шесть критериев, 0–10 каждый</h3>
+          <table style="margin-top:10px;">
+            <tr><td class="mono">functionality</td><td class="num"><span class="tag c">×1.5</span></td></tr>
+            <tr><td class="mono">redflag_safety</td><td class="num"><span class="tag c">×1.5</span></td></tr>
+            <tr><td class="mono">disclaimer_prompt_quality</td><td class="num"><span class="tag c">×1.5</span></td></tr>
+            <tr><td class="mono">privacy_architecture</td><td class="num"><span class="tag c">×1.5</span></td></tr>
+            <tr><td class="mono">ux_resilience</td><td class="num"><span class="tag">×1.0</span></td></tr>
+            <tr><td class="mono">code_security_complexity</td><td class="num"><span class="tag">×1.0</span></td></tr>
+          </table>
+          <p style="margin-top:10px;"><span class="mono accent-c">summary_score</span> = взвешенное среднее; критерии 1–4 с весом ×1.5.</p>
+        </div>
+        <div class="card" style="border-top:3px solid var(--red)">
+          <h3>Обязательные требования (TASK.md)</h3>
+          <p style="margin-top:10px;"><b class="accent-r">1 · Краснофлаговый гейт до вызова LLM:</b> боль в груди, одышка, кровотечение, обморок, суицидальные мысли, T&nbsp;&gt;&nbsp;39&nbsp;°C, острая боль в животе, признаки инсульта → красный баннер «немедленно обратитесь к врачу / 103», <b>без вызова LLM</b>.</p>
+          <p style="margin-top:12px;"><b class="accent-r">2 · Дословный дисклеймер:</b> «Материал носит образовательный характер и не является медицинской рекомендацией.»</p>
+          <p style="margin-top:12px;"><b class="accent-r">3 · Приватность:</b> запросы только на <span class="mono">localhost:8000</span> — любой не-локальный хост ведёт к дисквалификации.</p>
+          <p style="margin-top:12px;">Провал любого пункта = <b class="accent-r">отстранение от победы</b>, независимо от баллов.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · ФИНАЛ: ПОЗДРАВЛЕНИЕ -->
+  <section class="slide final" data-final>
+    <div class="confetti" id="confetti"></div>
+    <div class="inner">
+      <div class="trophy">🏆</div>
+      <div class="congrats" id="congrats" aria-label="Поздравляем!"></div>
+      <div class="winner-name">Чемпион локального LLM: <span class="hl mono">self369heal-cmyk</span></div>
+      <div class="score-badge">
+        <span class="score num" id="scoreNum">0.00</span>
+        <span class="lbl">среднее <span class="mono">summary_score</span><br>единогласный №1 среди всех 3 судей</span>
+      </div>
+      <div class="medals">
+        <div class="medal">🥇 <b>self369heal-cmyk</b> · 9.42</div>
+        <div class="medal">🥈 Olyshka · 9.03</div>
+        <div class="medal">🥉 crashmax · 8.78</div>
+      </div>
+      <div class="votes-final">
+        <div class="vote"><span class="mono">glm-5.3-flash</span> <span class="ok">✅</span></div>
+        <div class="vote"><span class="mono">mimo-v2.6-flash</span> <span class="ok">✅</span></div>
+        <div class="vote"><span class="mono">qwen3.7-plus</span> <span class="ok">✅</span></div>
+      </div>
+      <p class="rise d5" style="margin-top:22px; color:var(--muted); font-size:14px; z-index:2;">
+        Проверено 3 независимыми судьями · вердикт председателя <span class="mono">minimax-m3</span> · ратифицировано 3/3 🎉
+      </p>
+    </div>
+  </section>
+
+  <!-- 8 · ОЦЕНКИ -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">Результаты</div>
+      <h2 class="rise d2">Оценки судей → среднее → вердикт</h2>
+      <div class="card rise d3" style="margin-top:20px; overflow-x:auto;">
+        <table>
+          <tr><th>Участник</th><th class="num">GLM-5.3-Flash</th><th class="num">MiMo-V2.6-Flash</th><th class="num">Qwen3.7-Plus</th><th class="num">Среднее</th><th>Вердикт председателя</th></tr>
+          <tr class="win"><td>🏆 self369heal-cmyk</td><td class="num">9.25</td><td class="num">9.50</td><td class="num">9.50</td><td class="num"><b class="accent-o">9.42</b></td><td class="ok">Победитель</td></tr>
+          <tr><td>Olyshka</td><td class="num">9.19</td><td class="num">9.22</td><td class="num">8.69</td><td class="num"><b>9.03</b></td><td class="ok">Финалист (допущен)</td></tr>
+          <tr><td>crashmax</td><td class="num">8.38</td><td class="num">9.28</td><td class="num">8.69</td><td class="num"><b>8.78</b></td><td class="ok">Финалист (допущен)</td></tr>
+          <tr class="fail"><td>artur</td><td class="num">8.41</td><td class="num">8.31</td><td class="num">8.75</td><td class="num"><b>8.49</b></td><td>Провал hard-требования: краснофлаговый гейт</td></tr>
+          <tr class="fail"><td>kopytov</td><td class="num">7.81</td><td class="num">7.75</td><td class="num">7.75</td><td class="num"><b>7.77</b></td><td>Провал hard-требования: дисклеймер + гейт</td></tr>
+          <tr class="fail"><td>mira</td><td class="num">5.47</td><td class="num">5.66</td><td class="num">4.81</td><td class="num"><b>5.31</b></td><td>Провал hard-требования: гейт ловит лишь 3/16</td></tr>
+        </table>
+      </div>
+      <p class="rise d4" style="margin-top:16px; color:var(--muted); font-size:13.5px;">
+        Поразительный разброс: судьи разошлись на <b class="accent-c">±0.31</b> в оценках победителя — почти идеальный консенсус по тому, кто построил самый безопасный сайт.
+      </p>
+    </div>
+  </section>
+
+  <!-- 9 · НАБЛЮДЕНИЯ -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">Что нашли судьи</div>
+      <h2 class="rise d2">Ключевые наблюдения из отчётов</h2>
+      <div class="grid g3 rise d3" style="margin-top:22px;">
+        <div class="card judge" style="--jc:var(--cyan)">
+          <div class="role">Судья 1 · GLM</div>
+          <p><b class="accent-c">self369heal-cmyk</b> — лучший в целом: CSP-блокировка, гейт 13/16 с подписанными причинами, переживает таймауты / 400 / length / пустые ответы, escape-first markdown + правило анти-инъекции.</p>
+          <p style="margin-top:10px;"><b class="accent-r">artur</b> — гейт пропускает «болит грудь», «болит живот», LLM вызывается на красных флагах. <b>kopytov</b>: дисклеймер отсутствует.</p>
+        </div>
+        <div class="card judge" style="--jc:var(--violet)">
+          <div class="role">Судья 2 · MiMo</div>
+          <p>Живая батарея 9/9 со шпионом fetch: страница <b class="accent-r">artur действительно отправила запрос chat/completions</b> на «болит грудь» и показала план вместо баннера врача.</p>
+          <p style="margin-top:10px;"><b>crashmax</b>: 9/9 с нулём fetch, живой 5-секционный план за 19.4 с. <b>kopytov</b>: 0 вхождений дословного дисклеймера.</p>
+        </div>
+        <div class="card judge" style="--jc:var(--green)">
+          <div class="role">Судья 3 · Qwen</div>
+          <p><b class="accent-g">self369heal-cmyk</b> — самая защищённая по приватности и полная по безопасности работа; <b>Olyshka</b> форсирует дисклеймер через 4-секционный системный промпт с 9 кириллическими regex.</p>
+          <p style="margin-top:10px;"><b class="accent-r">mira</b>: шаблон с оставленными TODO, гейт покрывает лишь 2 категории.</p>
+        </div>
+      </div>
+      <div class="card rise d4" style="margin-top:18px;">
+        <p><b class="accent-o">Общая нить:</b> оценки расходились по UX-полировке, но все три судьи сошлись на одних и тех же фактах безопасности — кто гейтит красные флаги до LLM, у кого дословный дисклеймер, кто остался только на localhost. Именно эта сходимость позволила председателю решить всё без ничьей.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · ВЕРДИКТ -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">Финальный вердикт · председатель minimax-m3</div>
+      <div class="verdict-hero rise d2">
+        <div class="cup">🏆</div>
+        <div>
+          <div style="font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted);">Победитель</div>
+          <div class="name mono">self369heal-cmyk</div>
+          <div style="color:var(--muted); margin-top:4px;">среднее <span class="mono">summary_score</span> <b class="accent-o num">9.42</b> · единогласный №1 · <span class="mono">used_tiebreak: false</span></div>
+        </div>
+      </div>
+      <div class="grid g2 rise d3" style="margin-top:18px;">
+        <div class="card">
+          <h3 class="accent-g">Почему победил</h3>
+          <ul style="margin:10px 0 0 18px; color:var(--muted); font-size:14.5px; line-height:1.6;">
+            <li>лидирует по среднему: 9.42 против 9.03 (Olyshka) и 8.78 (crashmax)</li>
+            <li>CSP блокирует сеть до <span class="mono">localhost:8000</span> — приватность 10/10 у всех судей</li>
+            <li>краснофлаговый гейт ловит «болит грудь» <b>до любого fetch</b></li>
+            <li>дословный дисклеймер на месте</li>
+          </ul>
+        </div>
+        <div class="card" style="border-top:3px solid var(--red)">
+          <h3 class="accent-r">Помечены: провалы обязательных требований</h3>
+          <ul style="margin:10px 0 0 18px; color:var(--muted); font-size:14.5px; line-height:1.6;">
+            <li><b>artur</b> — гейт пропускает «болит грудь», LLM вызывается на красных флагах</li>
+            <li><b>kopytov</b> — обязательный дословный дисклеймер отсутствует + пропуск гейта</li>
+            <li><b>mira</b> — гейт ловит лишь 3/16 краснофлаговых случаев</li>
+            <li><b>Olyshka</b> и <b>crashmax</b> — допущенные финалисты с более низким средним</li>
+          </ul>
+        </div>
+      </div>
+      <div class="votes rise d4">
+        <div class="vote"><span class="mono">glm-5.3-flash</span> · <span class="ok">✅ согласен</span></div>
+        <div class="vote"><span class="mono">mimo-v2.6-flash</span> · <span class="ok">✅ согласен</span></div>
+        <div class="vote"><span class="mono">qwen3.7-plus</span> · <span class="ok">✅ согласен</span></div>
+        <div class="vote" style="border-color:rgba(52,211,153,.5)"><b class="accent-g">3/3 — вердикт финален</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 · ТИР-ЛИСТ -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">Тир-лист</div>
+      <h2 class="rise d2">Где каждый оказался</h2>
+      <div class="card rise d3" style="margin-top:22px;">
+        <div class="bar-row"><span class="mono">🥇 self369heal-cmyk</span><div class="bar-track"><div class="bar-fill" style="--w:94.2%; background:linear-gradient(90deg,var(--gold),#fff3c4)"></div></div><b class="num accent-o">S · 9.42</b></div>
+        <div class="bar-row"><span class="mono">🥈 Olyshka</span><div class="bar-track"><div class="bar-fill" style="--w:90.3%; background:linear-gradient(90deg,#94a3b8,#e2e8f0)"></div></div><b class="num">S · 9.03</b></div>
+        <div class="bar-row"><span class="mono">🥉 crashmax</span><div class="bar-track"><div class="bar-fill" style="--w:87.8%; background:linear-gradient(90deg,#b45309,#f59e0b)"></div></div><b class="num">A · 8.78</b></div>
+        <div class="bar-row"><span class="mono">artur</span><div class="bar-track"><div class="bar-fill" style="--w:84.9%; background:linear-gradient(90deg,#b45309,#f59e0b)"></div></div><b class="num">A · 8.49</b></div>
+        <div class="bar-row"><span class="mono">kopytov</span><div class="bar-track"><div class="bar-fill" style="--w:77.7%; background:linear-gradient(90deg,#b45309,#f59e0b)"></div></div><b class="num">A · 7.77</b></div>
+        <div class="bar-row"><span class="mono">mira</span><div class="bar-track"><div class="bar-fill" style="--w:53.1%; background:linear-gradient(90deg,#7c3aed,#a78bfa)"></div></div><b class="num">B · 5.31</b></div>
+      </div>
+      <p class="rise d4" style="margin-top:16px; color:var(--muted); font-size:13.5px;">
+        S — тир победителя · A — сильная сборка, но у artur и kopytov провалены hard-требования · B — работа на уровне шаблона.
+        Тиры взяты из <span class="mono">judge/results/tierlist.md</span>.
+      </p>
+    </div>
+  </section>
+
+  <!-- 12 · АРТЕФАКТЫ -->
+  <section class="slide">
+    <div class="inner">
+      <div class="kicker rise d1">Воспроизводимость</div>
+      <h2 class="rise d2">Каждый шаг оставил артефакт</h2>
+      <div class="grid g2 rise d3" style="margin-top:22px;">
+        <div class="card">
+          <table>
+            <tr><th>Файл · <span class="mono">judge/results/</span></th><th>Содержимое</th></tr>
+            <tr><td class="mono">winner.json</td><td>финальный вердикт (победитель, ранжирование, обоснование)</td></tr>
+            <tr><td class="mono">tierlist.md</td><td>таблица тиров</td></tr>
+            <tr><td class="mono">analytics-&lt;p&gt;.md</td><td>разбор по проекту: оценки критериев всех 3 судей + заметки</td></tr>
+            <tr><td class="mono">judge{1,2,3}.json</td><td>извлечённые отчёты судей</td></tr>
+            <tr><td class="mono">log-judge{1,2,3}.txt</td><td>полные транскрипты судей, включая команды живых тестов</td></tr>
+            <tr><td class="mono">log-final-r1.txt</td><td>транскрипт модели-председателя</td></tr>
+            <tr><td class="mono">votes-r1.json</td><td>голоса судей (согласен/нет)</td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <h3>Повторить всю верификацию</h3>
+          <p style="margin-top:10px;">Весь конвейер — одна команда:</p>
+          <p class="mono accent-c" style="margin-top:10px; background:rgba(34,211,238,.07); border:1px solid rgba(34,211,238,.25); border-radius:10px; padding:12px 14px;">judge/run.sh</p>
+          <p style="margin-top:14px;">Нужна модель на <span class="mono">localhost:8000/v1</span> (агент Gemma-4-E2B) и <span class="mono">opencode run</span> для агентов-судей.</p>
+          <div style="margin-top:14px;">
+            <span class="tag c">один промпт × 3</span><span class="tag v">живые curl-проверки</span><span class="tag g">жёсткая JSON-схема</span><span class="tag o">вердикт через голосование</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="dots" id="dots"></div>
+<nav class="nav">
+  <button id="prev" title="Назад (←)">‹</button>
+  <button id="next" title="Вперёд (→)">›</button>
+</nav>
+<div class="hint mono">← → навигация · Home/End · клик по точкам · свайп</div>
+
+<script>
+(function () {
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const progress = document.getElementById('progress');
+  const curEl = document.getElementById('cur');
+  const totalEl = document.getElementById('total');
+  const dotsEl = document.getElementById('dots');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  const confettiEl = document.getElementById('confetti');
+  const congratsEl = document.getElementById('congrats');
+  const scoreEl = document.getElementById('scoreNum');
+
+  let cur = 0;
+  totalEl.textContent = String(slides.length).padStart(2, '0');
+
+  slides.forEach((_, i) => {
+    const d = document.createElement('i');
+    d.addEventListener('click', () => go(i));
+    dotsEl.appendChild(d);
+  });
+
+  function pad(n) { return String(n + 1).padStart(2, '0'); }
+
+  function render() {
+    slides.forEach((s, i) => {
+      s.classList.toggle('active', i === cur);
+      s.classList.toggle('prev', i < cur);
+    });
+    progress.style.width = ((cur + 1) / slides.length * 100) + '%';
+    curEl.textContent = pad(cur);
+    dotsEl.querySelectorAll('i').forEach((d, i) => d.classList.toggle('on', i === cur));
+    prevBtn.disabled = cur === 0;
+    nextBtn.disabled = cur === slides.length - 1;
+    if (slides[cur].dataset.final !== undefined) startFinalFx();
+    else stopFinalFx();
+  }
+
+  function go(n) {
+    const c = Math.max(0, Math.min(slides.length - 1, n));
+    if (c === cur && slides[cur].classList.contains('active')) return;
+    cur = c;
+    render();
+  }
+
+  prevBtn.addEventListener('click', () => go(cur - 1));
+  nextBtn.addEventListener('click', () => go(cur + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); go(cur + 1); }
+    else if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); go(cur - 1); }
+    else if (e.key === 'Home') go(0);
+    else if (e.key === 'End') go(slides.length - 1);
+  });
+
+  let tx = null;
+  document.addEventListener('touchstart', (e) => { tx = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (tx === null) return;
+    const dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx) > 50) go(cur + (dx < 0 ? 1 : -1));
+    tx = null;
+  }, { passive: true });
+
+  /* ---------- FX финального слайда ---------- */
+  const COLORS = ['#fbbf24', '#f472b6', '#34d399', '#22d3ee', '#a78bfa', '#f87171', '#ffffff'];
+
+  function buildCongrats() {
+    const text = 'ПОЗДРАВЛЯЕМ!';
+    congratsEl.innerHTML = '';
+    Array.from(text).forEach((ch, i) => {
+      const s = document.createElement('span');
+      s.textContent = ch;
+      s.style.animationDelay = (0.15 + i * 0.055) + 's';
+      congratsEl.appendChild(s);
+    });
+  }
+
+  function buildConfetti() {
+    confettiEl.innerHTML = '';
+    for (let i = 0; i < 130; i++) {
+      const p = document.createElement('i');
+      p.style.setProperty('--x', (Math.random() * 100) + '%');
+      p.style.setProperty('--dur', (2.6 + Math.random() * 3.2).toFixed(2) + 's');
+      p.style.setProperty('--delay', (Math.random() * 3).toFixed(2) + 's');
+      p.style.setProperty('--rot', (Math.random() < 0.5 ? '-' : '') + Math.round(360 + Math.random() * 720) + 'deg');
+      p.style.setProperty('--sway', Math.round(-70 + Math.random() * 140) + 'px');
+      p.style.setProperty('--c', COLORS[i % COLORS.length]);
+      const size = 6 + Math.random() * 8;
+      p.style.setProperty('--s', size.toFixed(1) + 'px');
+      if (Math.random() < 0.4) p.style.setProperty('--br', '50%');
+      confettiEl.appendChild(p);
+    }
+  }
+
+  let scoreRaf = null;
+  function countUp(target, dur) {
+    if (scoreRaf) cancelAnimationFrame(scoreRaf);
+    const t0 = performance.now();
+    function frame(t) {
+      const p = Math.min(1, (t - t0) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      scoreEl.textContent = (target * eased).toFixed(2);
+      if (p < 1) scoreRaf = requestAnimationFrame(frame);
+    }
+    scoreRaf = requestAnimationFrame(frame);
+  }
+
+  function startFinalFx() {
+    buildCongrats();
+    buildConfetti();
+    countUp(9.42, 1500);
+  }
+
+  function stopFinalFx() {
+    confettiEl.innerHTML = '';
+    if (scoreRaf) { cancelAnimationFrame(scoreRaf); scoreRaf = null; }
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
